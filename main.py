@@ -1,10 +1,11 @@
 import os
 import collections
 import boto3
+
 from dotenv import load_dotenv
 from config.config import config, flags, TARGET_BUCKET_TEST_ENDPOINT, SOURCE_BUCKET_TEST_ENDPOINT, TARGET_BUCKET_NAME
 from functions import configure_logger, list_client_directories, build_manifest_template_structure, build_manifest, \
-    get_directory_images, create_structure_and_copy
+    get_directory_images, create_structure_and_copy, create_web_files
 
 
 load_dotenv()
@@ -90,6 +91,9 @@ if __name__ == "__main__":
             if flags['copy']:
                 create_structure_and_copy(_resource, target_sources_dir, target_images_dir,
                                           target_web_dir, source_prefix, image_listing, image_group_id)
+
+            if flags['create_web_files']:
+                create_web_files(_resource, target_images_dir, target_web_dir)
 
             if flags['manifest']:
                 web_image_listing = get_directory_images(_resource, f'{target_web_dir}/')

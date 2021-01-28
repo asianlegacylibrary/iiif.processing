@@ -34,8 +34,8 @@ MIN_IMAGE_SIZE = 32
 
 flags = {
     "copy": True,
-    "manifest": True
-
+    "manifest": True,
+    "create_web_files": True
 }
 
 put_objs = {
