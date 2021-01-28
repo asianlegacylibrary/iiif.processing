@@ -1,0 +1,16 @@
+{
+    "@context": "%(client_context)s",
+    "@type": "sc:Manifest",
+    "@id": "%(manifest_url)s",
+    "label": "%(manifest_title)s",
+    "description": "%(manifest_description)s",
+    "attribution": "%(attribution)s",
+    "logo": "%(client_host)s/%(logo)s",
+    "sequences": [
+        {
+            "@type": "sc:Sequence",
+            "viewingDirection": "top-to-bottom",
+            "canvases": []
+        }
+    ]
+}

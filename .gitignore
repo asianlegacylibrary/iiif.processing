@@ -1,0 +1,35 @@
+# gitignore
+# raw data directory
+# /data
+
+# and all archive dirs found in subdirs
+/_archive
+archive/
+_archive.py
+/manifests/_archive
+log.txt
+
+# move help text to readme
+help.txt
+# dotenv environment variables file
+.aws
+.env
+credentials*
+token.pickle
+
+
+# virtual env
+venv
+
+# python cache
+__pycache__
+
+# vs code settings
+.vscode
+
+# pycharm
+.idea
+
+
+
+
