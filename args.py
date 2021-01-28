@@ -3,7 +3,7 @@
 
 import argparse
 
-from _archive.create_s3_target_dirs import process_folders
+from _tools.create_s3_target_dirs import process_folders
 
 
 DEFAULT_TSV_FILENAME = "tools/Mantras.tsv"
