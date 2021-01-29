@@ -2,13 +2,32 @@ import os
 import collections
 import boto3
 
+import yaml
 from dotenv import load_dotenv
-from config.config import config, flags, TARGET_BUCKET_TEST_ENDPOINT, SOURCE_BUCKET_TEST_ENDPOINT, TARGET_BUCKET_NAME
 from functions import configure_logger, list_client_directories, build_manifest_template_structure, build_manifest, \
-    get_directory_images, create_structure_and_copy, create_web_files
+    get_directory_images, create_structure_and_copy, create_web_files, authorize_google, upload_manifest
 
 
 load_dotenv()
+
+spaces = {
+    'region_name': os.environ.get("SPACES_REGION"),
+    'endpoint_url': os.environ.get("SPACES_HOST"),
+    'aws_access_key_id': os.environ.get("AWS_KEY"),
+    'aws_secret_access_key': os.environ.get("AWS_SECRET")
+}
+
+with open('config.yaml') as c:
+    config = yaml.load(c, Loader=yaml.FullLoader)
+    flags = config['flags']
+    target_bucket_endpoint = config['digital_ocean']['target_bucket_endpoint']
+    source_bucket_endpoint = config['digital_ocean']['source_bucket_endpoint']
+    test_data = config['test_data']
+
+
+ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+source_tsv = os.path.abspath(os.path.join(ROOT_DIR, f"data/{test_data}"))
+print(source_tsv)
 
 # https://aciptest.sfo2.digitaloceanspaces.com/ISKS1RC748/web/ISKS1RC748-IG.ISKS1RC748.001/
 # https://aciptest.sfo2.digitaloceanspaces.com/ISKS1RC748/web/ISKS1RC748-IG.ISKS1RC748.001/IG.ISKS1RC748.001.0001.JPG
@@ -21,8 +40,8 @@ if __name__ == "__main__":
 
     # get session / resource for S3
     _session = boto3.session.Session()
-    _resource = _session.resource('s3', **config)
-    _client = boto3.client('s3', **config)
+    _resource = _session.resource('s3', **spaces)
+    _client = boto3.client('s3', **spaces)
 
     # create the structure for manifests
     manifest_structure, canvas_template = build_manifest_template_structure()
@@ -39,11 +58,6 @@ if __name__ == "__main__":
     # TSV file: first line is headers (field names), tab-separated;
     #  all following lines contain raw data, tab-separated.
     # We'll use namedtuple to access field values nicely (csv.Subject etc).
-    ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-    test_dir = 'ayurveda'  # 'ayurveda'
-    # source_tsv = os.path.abspath(os.path.join(ROOT_DIR, "data/Mantras.tsv"))
-    source_tsv = os.path.abspath(os.path.join(ROOT_DIR, f"data/{test_dir}.tsv"))
-    print(source_tsv)
 
     with open(source_tsv, "rt") as csv_file:
         # Remove all special symbols (spaces and #) from field names.
@@ -60,19 +74,20 @@ if __name__ == "__main__":
             # Correct path name for source images(scans) dir - from here we will copy files
             # ======= TODO MANTRA in csv and Mantras in bucket =======
             source_images_dir = '/'.join((record.Subject.lower().capitalize(), record.Series + ' ' + record.Title))
-            source_prefix = f'{SOURCE_BUCKET_TEST_ENDPOINT}{source_images_dir}/'
+            source_prefix = f'{source_bucket_endpoint}{source_images_dir}/'
 
             # check if CSV record exists in staging S3 bucket
             current_directory = record.Subject.lower().capitalize()
             client_directories = list_client_directories(_client, bucket='acip',
                                                          main_directory=f'staging_test/{current_directory}/')
 
-            if not source_prefix.lower() in (d.lower() for d in client_directories):
+            # need to create more robust comparison test between CATALOG and staging DIRECTORY
+            if not source_prefix.replace(" ", "").lower() in (d.replace(" ", "").lower() for d in client_directories):
                 continue
             else:
                 print(record)
                 for d in client_directories:
-                    if source_prefix.lower() == d.lower():
+                    if source_prefix.replace(" ", "").lower() == d.replace(" ", "").lower():
                         source_prefix = d
                         debug_tracking_found_directories.append(source_prefix)
 
@@ -80,9 +95,9 @@ if __name__ == "__main__":
             # Correct path names for target dirs : ItemUID/.../ItemUID + '-' + image_group_id
             image_group_id = 'IG.' + record.ItemUID + '.001'
 
-            target_sources_dir = '/'.join((TARGET_BUCKET_TEST_ENDPOINT, record.ItemUID, image_group_id, 'sources'))
-            target_images_dir = '/'.join((TARGET_BUCKET_TEST_ENDPOINT, record.ItemUID, image_group_id, 'images'))
-            target_web_dir = '/'.join((TARGET_BUCKET_TEST_ENDPOINT, record.ItemUID, image_group_id, 'web'))
+            target_sources_dir = '/'.join((target_bucket_endpoint, record.ItemUID, image_group_id, 'sources'))
+            target_images_dir = '/'.join((target_bucket_endpoint, record.ItemUID, image_group_id, 'images'))
+            target_web_dir = '/'.join((target_bucket_endpoint, record.ItemUID, image_group_id, 'web'))
             # print(target_web_dir, target_images_dir, target_sources_dir)
 
             image_listing = get_directory_images(_resource, source_prefix)
@@ -99,20 +114,11 @@ if __name__ == "__main__":
                 web_image_listing = get_directory_images(_resource, f'{target_web_dir}/')
                 print(f'Path has {len(web_image_listing["images"])} images', web_image_listing['images'])
 
-                local_manifest = build_manifest(web_image_listing, manifest_structure, canvas_template)
-                # upload manifest to S3 (to ItemUID/web)
-                # rename manifest - ItemUID.ImageGroupUID.manifest.json
                 new_manifest_name = record.ItemUID + '.' + image_group_id + '.manifest.json'
-                new_manifest_key = '/'.join((TARGET_BUCKET_TEST_ENDPOINT, record.ItemUID,
+                new_manifest_key = '/'.join((target_bucket_endpoint, record.ItemUID,
                                              image_group_id, new_manifest_name))
 
-                print(f"uploading local manifest='{local_manifest}' to S3 new_manifest_key='{new_manifest_key}'...")
-
-                _resource.meta.client.upload_file(
-                    local_manifest,
-                    TARGET_BUCKET_NAME,
-                    new_manifest_key,
-                    ExtraArgs={'ContentType': 'application/json', 'ACL': 'public-read'}
-                )
+                local_manifest = build_manifest(web_image_listing, manifest_structure, canvas_template)
+                upload_manifest(_resource, local_manifest, new_manifest_key)
 
         print(f'Processed TSV lines for: {debug_tracking_found_directories}')

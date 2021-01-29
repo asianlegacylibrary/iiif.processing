@@ -3,6 +3,7 @@ import botocore
 from PIL import Image
 from config.config import SOURCE_BUCKET_NAME, TARGET_BUCKET_NAME, put_objs
 from functions import get_directory_images
+from tqdm import tqdm
 
 
 # TODO: скопировать файлы
@@ -49,9 +50,9 @@ def copy_file(_resource, source_key, target_key):
     :return:
     """
 
-    print(f"copy file: source_bucket_name='{SOURCE_BUCKET_NAME}', "
-          f"source_key='{source_key}' \n  => target_bucket_name='{TARGET_BUCKET_NAME}', "
-          f"target_key='{target_key}'")
+    # print(f"copy file: source_bucket_name='{SOURCE_BUCKET_NAME}', "
+    #       f"source_key='{source_key}' \n  => target_bucket_name='{TARGET_BUCKET_NAME}', "
+    #       f"target_key='{target_key}'")
 
     copy_source = {
         'Bucket': SOURCE_BUCKET_NAME,
@@ -143,3 +144,19 @@ def create_web_files(_resource, dir_images, dir_web):
             image_processed_key,
             ExtraArgs={'ContentType': 'image/jpeg', 'ACL': 'public-read'}
         )
+
+
+def upload_manifest(_resource, local_manifest, new_manifest_key):
+
+    print(f"uploading local manifest='{local_manifest}' to S3 new_manifest_key='{new_manifest_key}'...")
+
+    try:
+        _resource.meta.client.upload_file(
+            local_manifest,
+            TARGET_BUCKET_NAME,
+            new_manifest_key,
+            ExtraArgs={'ContentType': 'application/json', 'ACL': 'public-read'}
+        )
+
+    except botocore.exceptions.ClientError as e:
+        print('upload error', e)

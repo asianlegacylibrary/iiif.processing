@@ -7,7 +7,8 @@ from .list_directories import list_directory_files, list_test_directories, get_i
     get_directory_images
 from .build_manifest import build_manifest, build_manifest_alt
 from .build_manifest_template_structure import build_manifest_template_structure
-from .file_processing import copy_files, create_structure_and_copy, create_web_files
+from .file_processing import copy_files, create_structure_and_copy, create_web_files, upload_manifest
+from .authorize_google import authorize_google
 
 # logging
 from .print_logger import Logger, conf_log

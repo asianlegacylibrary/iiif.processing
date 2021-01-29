@@ -1,5 +1,4 @@
 import os
-import sys
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -10,6 +9,22 @@ config = {
     'aws_access_key_id': os.environ.get("AWS_KEY"),
     'aws_secret_access_key': os.environ.get("AWS_SECRET"),
 
+}
+
+conf_gs = {
+    "scope": [
+        "https://spreadsheets.google.com/feeds",
+        "https://www.googleapis.com/auth/drive",
+    ],
+    "credentials": {
+        "iiif": "config/credentials.json",
+        "nlm": "config/credentials_gs_old.json"
+    },
+    "sheet_key": "1-YPHZj1-YVPs7FW0p5IFKgw4qcGCRklg4WdmDEHuQZs",
+    "sheet_key_test": "1scb2UMLbuuDoGYlnOcFvpW9ZjC54Z6bbiEUeEj-LQQs",
+    "sheet_mongolia_test": "1SLgnUq4ohrAODB-XNQ6oiVqQxxJmeR0IQPozSpW6xiw",
+    "sheet_names_filter": "new",
+    "sheet_mongolia_filter": "acip-title-level"
 }
 
 BUCKET_ENDPOINT = os.environ.get("SPACES_ENDPOINT")

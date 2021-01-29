@@ -1,0 +1,41 @@
+flags:
+    copy: True
+    manifest: True
+    create_web_files: True
+    process_all_images_for_manifest: True
+
+google_sheets:
+    scope:
+        - "https://spreadsheets.google.com/feeds"
+        - "https://www.googleapis.com/auth/drive"
+    credentials:
+        iiif: "config/credentials.json"
+        nlm: "config/credentials_gs_old.json"
+    sheet_key: "1-YPHZj1-YVPs7FW0p5IFKgw4qcGCRklg4WdmDEHuQZs"
+    sheet_key_test: "1scb2UMLbuuDoGYlnOcFvpW9ZjC54Z6bbiEUeEj-LQQs"
+    sheet_mongolia_test: "1SLgnUq4ohrAODB-XNQ6oiVqQxxJmeR0IQPozSpW6xiw"
+    sheet_names_filter: "new"
+    sheet_mongolia_filter: "acip-title-level"
+
+digital_ocean:
+    source_bucket: 'acip'
+    target_bucket: 'acip'
+    target_bucket_endpoint: 'scans/unpublished'
+    source_bucket_endpoint: 'staging_test/'
+
+test_data: 'Tarka.tsv.txt'
+MANIFEST_SAVE_DIR: '../manifests'
+MIN_IMAGE_SIZE: 32
+
+
+#
+#put_objs = {
+#    'Bucket': 'acip',
+#    'Body': 'Contents',
+#    'Key': ''
+#}
+#
+#operation_parameters = {
+#    'Bucket': 'acip',
+#    'Delimiter': '/'
+#}
