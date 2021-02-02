@@ -15,7 +15,7 @@
 
           "service": {
             "@context": "http://iiif.io/api/image/2/context.json",
-            "@id": "%(server_host)s/%(server_path)s/%(iiif_version)s/%(identifier)s.%(image_ext)s",
+            "@id": "%(server_host)s/%(server_path)s/%(iiif_version)s/%(identifier)s",
             "profile": "%(server_profile)s"
           }
         }

@@ -1,6 +1,11 @@
+from urllib.parse import quote
+
+
 def update_canvas_items(placeholder_values, **kwargs):
+    identifier = quote(f"{kwargs['group_name']}/{kwargs['image_name']}", safe='')
+    print(identifier)
     return dict(
-        identifier=f"{kwargs['group_name']}%2F{kwargs['image_name']}",
+        identifier=identifier,
         image_name=kwargs['image_name'],
         image_seq=kwargs['image_seq'],
         image_num=kwargs['image_num'],

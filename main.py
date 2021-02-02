@@ -5,11 +5,10 @@ import boto3
 import yaml
 from dotenv import load_dotenv
 from functions import configure_logger, list_client_directories, build_manifest_template_structure, build_manifest, \
-    get_directory_images, create_structure_and_copy, create_web_files, authorize_google, upload_manifest
+    get_directory_images, create_structure_and_copy, create_web_files, upload_manifest
 
 
 load_dotenv()
-
 spaces = {
     'region_name': os.environ.get("SPACES_REGION"),
     'endpoint_url': os.environ.get("SPACES_HOST"),
@@ -22,18 +21,19 @@ with open('config.yaml') as c:
     flags = config['flags']
     target_bucket_endpoint = config['digital_ocean']['target_bucket_endpoint']
     source_bucket_endpoint = config['digital_ocean']['source_bucket_endpoint']
-    test_data = config['test_data']
+    test_data_file = config['test_data']
 
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-source_tsv = os.path.abspath(os.path.join(ROOT_DIR, f"data/{test_data}"))
-print(source_tsv)
+source_tsv = os.path.abspath(os.path.join(ROOT_DIR, f"data/{test_data_file}"))
+
 
 # https://aciptest.sfo2.digitaloceanspaces.com/ISKS1RC748/web/ISKS1RC748-IG.ISKS1RC748.001/
 # https://aciptest.sfo2.digitaloceanspaces.com/ISKS1RC748/web/ISKS1RC748-IG.ISKS1RC748.001/IG.ISKS1RC748.001.0001.JPG
 
 if __name__ == "__main__":
-    print("current working directory:", os.path.abspath(os.path.curdir))
+    print(f'current working directory: {os.path.abspath(os.path.curdir)}')
+    print(f'Source data coming from {source_tsv}')
 
     # set up error logs
     configure_logger()
@@ -72,9 +72,8 @@ if __name__ == "__main__":
             record = CsvLineClass._make(line.split('\t'))
 
             # Correct path name for source images(scans) dir - from here we will copy files
-            # ======= TODO MANTRA in csv and Mantras in bucket =======
             source_images_dir = '/'.join((record.Subject.lower().capitalize(), record.Series + ' ' + record.Title))
-            source_prefix = f'{source_bucket_endpoint}{source_images_dir}/'
+            _SOURCE = f'{source_bucket_endpoint}{source_images_dir}/'
 
             # check if CSV record exists in staging S3 bucket
             current_directory = record.Subject.lower().capitalize()
@@ -82,37 +81,37 @@ if __name__ == "__main__":
                                                          main_directory=f'staging_test/{current_directory}/')
 
             # need to create more robust comparison test between CATALOG and staging DIRECTORY
-            if not source_prefix.replace(" ", "").lower() in (d.replace(" ", "").lower() for d in client_directories):
+            if not _SOURCE.replace(" ", "").lower() in (d.replace(" ", "").lower() for d in client_directories):
                 continue
             else:
-                print(record)
                 for d in client_directories:
-                    if source_prefix.replace(" ", "").lower() == d.replace(" ", "").lower():
-                        source_prefix = d
-                        debug_tracking_found_directories.append(source_prefix)
+                    if _SOURCE.replace(" ", "").lower() == d.replace(" ", "").lower():
+                        _SOURCE = d
+                        print(record)
+                        # quit()
+                        debug_tracking_found_directories.append(_SOURCE)
 
-            # TODO - нужен признак тома, сколько томов у книги? Есть в CSV файле
+            # TODO - need a volume tag, how many volumes does the book have? Available in CSV file
             # Correct path names for target dirs : ItemUID/.../ItemUID + '-' + image_group_id
             image_group_id = 'IG.' + record.ItemUID + '.001'
 
             target_sources_dir = '/'.join((target_bucket_endpoint, record.ItemUID, image_group_id, 'sources'))
             target_images_dir = '/'.join((target_bucket_endpoint, record.ItemUID, image_group_id, 'images'))
             target_web_dir = '/'.join((target_bucket_endpoint, record.ItemUID, image_group_id, 'web'))
-            # print(target_web_dir, target_images_dir, target_sources_dir)
 
-            image_listing = get_directory_images(_resource, source_prefix)
-            print(f'Path has {len(image_listing["images"])} images', image_listing['images'])
+            image_listing = get_directory_images(_resource, _SOURCE)
+            print(f'Path for {record.ItemUID} has {len(image_listing["images"])} images', image_listing['images'])
 
             if flags['copy']:
                 create_structure_and_copy(_resource, target_sources_dir, target_images_dir,
-                                          target_web_dir, source_prefix, image_listing, image_group_id)
+                                          target_web_dir, _SOURCE, image_listing, image_group_id)
 
             if flags['create_web_files']:
                 create_web_files(_resource, target_images_dir, target_web_dir)
 
             if flags['manifest']:
                 web_image_listing = get_directory_images(_resource, f'{target_web_dir}/')
-                print(f'Path has {len(web_image_listing["images"])} images', web_image_listing['images'])
+                # print(f'Path has {len(web_image_listing["images"])} images', web_image_listing['images'])
 
                 new_manifest_name = record.ItemUID + '.' + image_group_id + '.manifest.json'
                 new_manifest_key = '/'.join((target_bucket_endpoint, record.ItemUID,
