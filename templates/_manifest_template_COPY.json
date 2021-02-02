@@ -6,5 +6,12 @@
     "description": "%(manifest_description)s",
     "attribution": "%(attribution)s",
     "logo": "%(client_host)s/%(logo)s",
-    "sequences": []
+    "sequences": [
+        {
+            "@type": "sc:Sequence",
+            "viewingDirection": "%(viewing)s",
+            "canvases": []
+        }
+    ]
 }
+

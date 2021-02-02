@@ -2,8 +2,8 @@
     "@type": "sc:Canvas",
     "@id": "%(client_host)s/%(group_name)s/canvas/%(image_num)s",
     "label": "%(image_num)s",
-    "width": 2307,
-    "height": 438,
+    "width": "%(width)i",
+    "height": "%(height)i",
     "images": [
       {
         "@type": "oa:Annotation",

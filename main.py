@@ -1,39 +1,21 @@
 import os
+from pathlib import Path
+import json
 import collections
 import boto3
-
-import yaml
-from dotenv import load_dotenv
+from settings import flags, test_data_file, spaces, source_bucket_endpoint, target_bucket_endpoint, \
+    source_bucket, local_image_listing_file, scan_directories
 from functions import configure_logger, list_client_directories, build_manifest_template_structure, build_manifest, \
-    get_directory_images, create_structure_and_copy, create_web_files, upload_manifest
-
-
-load_dotenv()
-spaces = {
-    'region_name': os.environ.get("SPACES_REGION"),
-    'endpoint_url': os.environ.get("SPACES_HOST"),
-    'aws_access_key_id': os.environ.get("AWS_KEY"),
-    'aws_secret_access_key': os.environ.get("AWS_SECRET")
-}
-
-with open('config.yaml') as c:
-    config = yaml.load(c, Loader=yaml.FullLoader)
-    flags = config['flags']
-    target_bucket_endpoint = config['digital_ocean']['target_bucket_endpoint']
-    source_bucket_endpoint = config['digital_ocean']['source_bucket_endpoint']
-    test_data_file = config['test_data']
+    get_digital_ocean_images, create_structure_and_copy, create_web_files, upload_manifest
 
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 source_tsv = os.path.abspath(os.path.join(ROOT_DIR, f"data/{test_data_file}"))
 
-
-# https://aciptest.sfo2.digitaloceanspaces.com/ISKS1RC748/web/ISKS1RC748-IG.ISKS1RC748.001/
-# https://aciptest.sfo2.digitaloceanspaces.com/ISKS1RC748/web/ISKS1RC748-IG.ISKS1RC748.001/IG.ISKS1RC748.001.0001.JPG
-
 if __name__ == "__main__":
     print(f'current working directory: {os.path.abspath(os.path.curdir)}')
     print(f'Source data coming from {source_tsv}')
+    print(f'Processing steps: COPY={flags["copy"]} // WEB={flags["create_web_files"]} // MANIFEST={flags["manifest"]}')
 
     # set up error logs
     configure_logger()
@@ -44,7 +26,7 @@ if __name__ == "__main__":
     _client = boto3.client('s3', **spaces)
 
     # create the structure for manifests
-    manifest_structure, canvas_template = build_manifest_template_structure()
+    manifest_structure, canvas_template, seq_template = build_manifest_template_structure()
 
     # get catalog records (currently from CSV)
 
@@ -68,6 +50,7 @@ if __name__ == "__main__":
         CsvLineClass = collections.namedtuple('CSVLine', field_names, rename=True)
         # print(header_line, field_names, CsvLineClass)
         debug_tracking_found_directories = []
+        web_image_listing = None
         for line in csv_file:
             record = CsvLineClass._make(line.split('\t'))
 
@@ -88,36 +71,51 @@ if __name__ == "__main__":
                     if _SOURCE.replace(" ", "").lower() == d.replace(" ", "").lower():
                         _SOURCE = d
                         print(record)
+                        # Subject, Title, Description, Author, AuthorDate, Commentary, Language, Script, Material,
+                        # Size_inches, Library, Folios, Publication, Year, Edition,
                         # quit()
                         debug_tracking_found_directories.append(_SOURCE)
 
             # TODO - need a volume tag, how many volumes does the book have? Available in CSV file
             # Correct path names for target dirs : ItemUID/.../ItemUID + '-' + image_group_id
             image_group_id = 'IG.' + record.ItemUID + '.001'
+            image_group_path = '/'.join((target_bucket_endpoint, record.ItemUID, image_group_id))
 
-            target_sources_dir = '/'.join((target_bucket_endpoint, record.ItemUID, image_group_id, 'sources'))
-            target_images_dir = '/'.join((target_bucket_endpoint, record.ItemUID, image_group_id, 'images'))
-            target_web_dir = '/'.join((target_bucket_endpoint, record.ItemUID, image_group_id, 'web'))
-
-            image_listing = get_directory_images(_resource, _SOURCE)
+            image_listing = get_digital_ocean_images(_resource, _SOURCE)
             print(f'Path for {record.ItemUID} has {len(image_listing["images"])} images', image_listing['images'])
 
             if flags['copy']:
-                create_structure_and_copy(_resource, target_sources_dir, target_images_dir,
-                                          target_web_dir, _SOURCE, image_listing, image_group_id)
+                create_structure_and_copy(_resource, image_group_path, _SOURCE, image_listing, image_group_id)
 
             if flags['create_web_files']:
-                create_web_files(_resource, target_images_dir, target_web_dir)
+                web_image_listing = create_web_files(_resource, image_group_path)
 
             if flags['manifest']:
-                web_image_listing = get_directory_images(_resource, f'{target_web_dir}/')
-                # print(f'Path has {len(web_image_listing["images"])} images', web_image_listing['images'])
+                if web_image_listing is None:
+                    print('we did not upload web images this iteration...')
+                    dir_images = '/'.join((image_group_path, scan_directories['images']))
+                    local_dir_path = '/'.join(('data', '_tmp_images', dir_images))
+                    local_image_list = '/'.join((local_dir_path, '_image_listing.json'))
+                    if Path(local_image_list).is_file():
+                        print(f'using existing image listing found here: {local_image_list}')
+                        with open(local_image_list, 'r') as fp:
+                            web_image_listing = json.load(fp)
+                    else:
+                        print('recreating image listing from web directory')
+                        target_web_dir = '/'.join((image_group_path, 'web'))
+                        web_image_listing = get_digital_ocean_images(_resource, f'{target_web_dir}/')
+                        # print(f'Path has {len(web_image_listing["images"])} images', web_image_listing['images'])
 
                 new_manifest_name = record.ItemUID + '.' + image_group_id + '.manifest.json'
                 new_manifest_key = '/'.join((target_bucket_endpoint, record.ItemUID,
                                              image_group_id, new_manifest_name))
 
-                local_manifest = build_manifest(web_image_listing, manifest_structure, canvas_template)
+                local_manifest = build_manifest(web_image_listing, manifest_structure, canvas_template, seq_template)
+                print(local_manifest)
+
                 upload_manifest(_resource, local_manifest, new_manifest_key)
+
+            if flags['test_run']:
+                quit()
 
         print(f'Processed TSV lines for: {debug_tracking_found_directories}')

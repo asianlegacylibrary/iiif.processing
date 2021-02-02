@@ -1,8 +1,19 @@
 flags:
     copy: True
-    manifest: True
     create_web_files: True
+    manifest: True
     process_all_images_for_manifest: True
+    process_resize: True
+    process_upload: True
+    download_overwrite: True
+    test_run: False
+
+scan_directories:
+    web: 'web'
+    sources: 'sources'
+    images: 'images'
+
+local_image_listing_file: 'data/image_listing.json'
 
 google_sheets:
     scope:
@@ -23,7 +34,7 @@ digital_ocean:
     target_bucket_endpoint: 'scans/unpublished'
     source_bucket_endpoint: 'staging_test/'
 
-test_data: 'Tarka.tsv.txt'
+test_data: 'ayurveda.tsv'
 MANIFEST_SAVE_DIR: '../manifests'
 MIN_IMAGE_SIZE: 32
 

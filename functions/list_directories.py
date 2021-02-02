@@ -29,7 +29,7 @@ def list_client_directories(_client, bucket='acip', main_directory=''):
     return dirs
 
 
-def get_directory_images(_resource, source_address):
+def get_digital_ocean_images(_resource, source_address):
     op = dict(operation_parameters)
     op['Prefix'] = source_address
 
@@ -42,6 +42,7 @@ def get_directory_images(_resource, source_address):
         # print(page)
         # page contents correspond to image groups
         images = []
+        images_dict = {}
         page_key = page['ResponseMetadata'].get('RequestId',
                                                 'some_key')  # need a random key gen if no req id present
         for group in page['Contents']:
@@ -49,12 +50,15 @@ def get_directory_images(_resource, source_address):
                 continue
             [dir_path, image_name] = os.path.split(group.get('Key'))
             images.append(image_name)
+            images_dict[image_name] = {}
 
         if images:
             image_listing.update({
                 'key': page_key,
                 'path': dir_path,
                 'source_path': source_address,
-                'images': images})
+                'images': images,
+                'images_dict': images_dict
+            })
 
     return image_listing

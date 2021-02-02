@@ -1,4 +1,4 @@
-p = {
+manifest_values = {
     "client_host": "http://iiif.asianclassics.org",
     "server_host": "http://157.245.187.36:8182",
     "server_profile": "http://iiif.io/api/image/2/level2.json",
@@ -11,7 +11,9 @@ p = {
     "manifest_title": "Sunlight on the Path to Freedom, A Commentary to the Diamond Cutter Sutra",
     "attribution": "Scanned by BDRC",
     "image_ext": "jpg",
-    "logo": "logo192.png",
-    "width": 2319,
-    "height": 389
+    "logo": "logo192.png"
+}
+
+sequence_values = {
+    "viewing": "top-to-bottom"
 }
