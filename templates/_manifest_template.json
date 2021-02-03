@@ -3,6 +3,7 @@
     "@type": "sc:Manifest",
     "@id": "%(manifest_url)s",
     "label": "%(manifest_title)s",
+    "metadata": [],
     "description": "%(manifest_description)s",
     "attribution": "%(attribution)s",
     "logo": "%(client_host)s/%(logo)s",

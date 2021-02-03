@@ -6,7 +6,10 @@ flags:
     process_resize: True
     process_upload: True
     download_overwrite: True
+    image_group_overwrite: True
     test_run: False
+
+test_data: 'Tarka.tsv.txt'
 
 scan_directories:
     web: 'web'
@@ -34,7 +37,7 @@ digital_ocean:
     target_bucket_endpoint: 'scans/unpublished'
     source_bucket_endpoint: 'staging_test/'
 
-test_data: 'ayurveda.tsv'
+
 MANIFEST_SAVE_DIR: '../manifests'
 MIN_IMAGE_SIZE: 32
 

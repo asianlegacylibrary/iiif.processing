@@ -4,12 +4,14 @@ import json
 import collections
 import boto3
 from settings import flags, test_data_file, spaces, source_bucket_endpoint, target_bucket_endpoint, \
-    source_bucket, local_image_listing_file, scan_directories
-from functions import configure_logger, list_client_directories, build_manifest_template_structure, build_manifest, \
-    get_digital_ocean_images, create_structure_and_copy, create_web_files, upload_manifest
+    scan_directories, target_bucket
+from functions import configure_logger, list_client_directories, build_manifest, \
+    get_digital_ocean_images, create_structure_and_copy, create_web_files, upload_manifest, load_templates
+from classes import TermColors
 
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
+TEMPLATE_DIR = os.path.join(ROOT_DIR, 'templates')
 source_tsv = os.path.abspath(os.path.join(ROOT_DIR, f"data/{test_data_file}"))
 
 if __name__ == "__main__":
@@ -26,7 +28,8 @@ if __name__ == "__main__":
     _client = boto3.client('s3', **spaces)
 
     # create the structure for manifests
-    manifest_structure, canvas_template, seq_template = build_manifest_template_structure()
+    manifest_template, canvas_template, seq_template = load_templates(TEMPLATE_DIR)
+    # manifest_structure, canvas_template, seq_template = build_manifest_template_structure()
 
     # get catalog records (currently from CSV)
 
@@ -41,7 +44,7 @@ if __name__ == "__main__":
     #  all following lines contain raw data, tab-separated.
     # We'll use namedtuple to access field values nicely (csv.Subject etc).
 
-    with open(source_tsv, "rt") as csv_file:
+    with open(source_tsv, mode="rt", encoding="utf-8") as csv_file:
         # Remove all special symbols (spaces and #) from field names.
         header_line = csv_file.readline().replace(" ", "").replace("#", "")
         field_names = header_line.split('\t')
@@ -49,10 +52,26 @@ if __name__ == "__main__":
         #  so use "rename=True" to auto-rename such fields to "_1", "_2" etc
         CsvLineClass = collections.namedtuple('CSVLine', field_names, rename=True)
         # print(header_line, field_names, CsvLineClass)
-        debug_tracking_found_directories = []
-        web_image_listing = None
+        debug_found_directories = []
+        debug_exists_directories = []
+        debug_not_found_directories = []
+
         for line in csv_file:
             record = CsvLineClass._make(line.split('\t'))
+            web_image_listing = None  # reset the image listing, in cases we're pulling locally
+
+            # TODO - need a volume tag, how many volumes does the book have? Available in CSV file
+            # Correct path names for target dirs : ItemUID/.../ItemUID + '-' + image_group_id
+            image_group_id = 'IG.' + record.ItemUID + '.001'
+            image_group_path = '/'.join((target_bucket_endpoint, record.ItemUID, image_group_id))
+
+            # check if directory already exists
+            if not flags['image_group_overwrite']:
+                results = _client.list_objects(Bucket=target_bucket, Prefix=image_group_path)
+                if 'Contents' in results:
+                    print(f'{TermColors.WARNING}{image_group_path} already exists, skipping....{TermColors.ENDC}')
+                    debug_exists_directories.append(image_group_path)
+                    continue
 
             # Correct path name for source images(scans) dir - from here we will copy files
             source_images_dir = '/'.join((record.Subject.lower().capitalize(), record.Series + ' ' + record.Title))
@@ -65,21 +84,17 @@ if __name__ == "__main__":
 
             # need to create more robust comparison test between CATALOG and staging DIRECTORY
             if not _SOURCE.replace(" ", "").lower() in (d.replace(" ", "").lower() for d in client_directories):
+                print(f'{TermColors.OKCYAN}{record.Subject} // {record.Title} // not found in S3 staging{TermColors.ENDC}')
+                debug_not_found_directories.append(record.Title)
                 continue
-            else:
-                for d in client_directories:
-                    if _SOURCE.replace(" ", "").lower() == d.replace(" ", "").lower():
-                        _SOURCE = d
-                        print(record)
-                        # Subject, Title, Description, Author, AuthorDate, Commentary, Language, Script, Material,
-                        # Size_inches, Library, Folios, Publication, Year, Edition,
-                        # quit()
-                        debug_tracking_found_directories.append(_SOURCE)
 
-            # TODO - need a volume tag, how many volumes does the book have? Available in CSV file
-            # Correct path names for target dirs : ItemUID/.../ItemUID + '-' + image_group_id
-            image_group_id = 'IG.' + record.ItemUID + '.001'
-            image_group_path = '/'.join((target_bucket_endpoint, record.ItemUID, image_group_id))
+            for d in client_directories:
+                if _SOURCE.replace(" ", "").lower() == d.replace(" ", "").lower():
+                    _SOURCE = d
+                    print(f'{TermColors.OKBLUE}Found {record.ItemUID} catalog record in S3 directories{TermColors.ENDC}')
+
+                    # quit()
+                    debug_found_directories.append(_SOURCE)
 
             image_listing = get_digital_ocean_images(_resource, _SOURCE)
             print(f'Path for {record.ItemUID} has {len(image_listing["images"])} images', image_listing['images'])
@@ -110,7 +125,8 @@ if __name__ == "__main__":
                 new_manifest_key = '/'.join((target_bucket_endpoint, record.ItemUID,
                                              image_group_id, new_manifest_name))
 
-                local_manifest = build_manifest(web_image_listing, manifest_structure, canvas_template, seq_template)
+                local_manifest = build_manifest(web_image_listing, manifest_template, canvas_template,
+                                                seq_template, record)
                 print(local_manifest)
 
                 upload_manifest(_resource, local_manifest, new_manifest_key)
@@ -118,4 +134,6 @@ if __name__ == "__main__":
             if flags['test_run']:
                 quit()
 
-        print(f'Processed TSV lines for: {debug_tracking_found_directories}')
+        print(f'Processed TSV lines for: {debug_found_directories}')
+        print(f'These titles not found in S3 staging: {debug_not_found_directories}')
+        print(f'These directories skipped, already exist: {debug_exists_directories}')

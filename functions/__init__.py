@@ -5,7 +5,6 @@ from .update_document_placeholders import update_json_placeholders, update_canva
 from .get_image_index import get_image_index, get_trailing_number, standardize_digits
 from .list_directories import list_test_directories, list_client_directories, get_digital_ocean_images
 from .build_manifest import build_manifest
-from .build_manifest_template_structure import build_manifest_template_structure
 from .file_processing import create_structure_and_copy, create_web_files, upload_manifest, process_image
 from .authorize_google import authorize_google
 
