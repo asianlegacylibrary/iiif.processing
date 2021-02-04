@@ -46,3 +46,5 @@ uritemplate==3.0.1
 urllib3==1.25.10
 confuse~=1.4.0
 PyYAML~=5.4.1
+deskew~=0.10.3
+opencv-python~=4.5.1.48

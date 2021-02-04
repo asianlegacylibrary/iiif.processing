@@ -7,6 +7,7 @@ from .list_directories import list_test_directories, list_client_directories, ge
 from .build_manifest import build_manifest
 from .file_processing import create_structure_and_copy, create_web_files, upload_manifest, process_image
 from .authorize_google import authorize_google
+from .process_rotation import process_rotate
 
 # logging
 from .print_logger import Logger, conf_log

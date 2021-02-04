@@ -13,6 +13,7 @@ global source_bucket_endpoint
 global test_data_file
 global scan_directories
 global local_image_listing_file
+global orientation
 
 load_dotenv()
 
@@ -33,3 +34,4 @@ with open('config.yaml') as c:
     test_data_file = config['test_data']
     scan_directories = config['scan_directories']
     local_image_listing_file = config['local_image_listing_file']
+    orientation = config['orientation']

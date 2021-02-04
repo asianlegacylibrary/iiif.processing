@@ -5,11 +5,11 @@ flags:
     process_all_images_for_manifest: True
     process_resize: True
     process_upload: True
-    download_overwrite: True
-    image_group_overwrite: True
+    download_overwrite: False
+    image_group_overwrite: False
     test_run: False
 
-test_data: 'Tarka.tsv.txt'
+test_data: 'Ramachandran.tsv'
 
 scan_directories:
     web: 'web'
@@ -37,6 +37,9 @@ digital_ocean:
     target_bucket_endpoint: 'scans/unpublished'
     source_bucket_endpoint: 'staging_test/'
 
+orientation:
+    landscape: "top-to-bottom"
+    portrait: "left-to-right"
 
 MANIFEST_SAVE_DIR: '../manifests'
 MIN_IMAGE_SIZE: 32

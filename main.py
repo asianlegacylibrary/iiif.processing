@@ -44,6 +44,8 @@ if __name__ == "__main__":
     #  all following lines contain raw data, tab-separated.
     # We'll use namedtuple to access field values nicely (csv.Subject etc).
 
+    # TODO: figure out how to encode / decode sanskrit properly
+    # UnicodeEncodeError: 'charmap' codec can't encode character '\x81' in position 24: character maps to <undefined>
     with open(source_tsv, mode="rt", encoding="utf-8") as csv_file:
         # Remove all special symbols (spaces and #) from field names.
         header_line = csv_file.readline().replace(" ", "").replace("#", "")

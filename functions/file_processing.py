@@ -4,9 +4,11 @@ import json
 from pathlib import Path
 import botocore
 from PIL import Image
-from settings import flags, scan_directories, local_image_listing_file
+import cv2
+from deskew import determine_skew
+from settings import flags, scan_directories, orientation
 from config.config import SOURCE_BUCKET_NAME, TARGET_BUCKET_NAME, put_objs
-from functions import get_digital_ocean_images, standardize_digits
+from functions import get_digital_ocean_images, standardize_digits, process_rotate
 
 
 def copy_file(_resource, source_key, target_key):
@@ -71,8 +73,14 @@ def process_image(local_file_path, image_name, dir_web):
 
     img = Image.open(local_file_path)
     dpi = img.info['dpi']
-    viewing = "top-to-bottom" if img.width >= img.height else "left-to-right"
+    viewing = orientation['landscape'] if img.width >= img.height else orientation['portrait']
     # img.load()
+
+    cv_image = cv2.imread(local_file_path)
+    grayscale = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
+    angle = determine_skew(grayscale)
+    rotated = process_rotate(cv_image, angle, (0, 0, 0))
+    cv2.imwrite('test22-rotate.jpg', rotated)
 
     if flags['process_resize'] and all(i > 72 for i in dpi):
         img.save(local_file_path, dpi=(72.0, 72.0))
