@@ -4,11 +4,33 @@ import json
 from pathlib import Path
 import botocore
 from PIL import Image
-import cv2
-from deskew import determine_skew
-from settings import flags, scan_directories, orientation
+
+from settings import flags, scan_directories, orientation, image_processing
 from config.config import SOURCE_BUCKET_NAME, TARGET_BUCKET_NAME, put_objs
-from functions import get_digital_ocean_images, standardize_digits, process_rotate
+from functions import get_digital_ocean_images, standardize_digits
+from typing import Tuple, Union
+import numpy as np
+import cv2
+import math
+from deskew import determine_skew
+
+
+def process_rotate(
+        image: np.ndarray, angle: float, background: Union[int, Tuple[int, int, int]]
+) -> np.ndarray:
+
+    old_width, old_height = image.shape[:2]
+    angle_radian = math.radians(angle)
+
+    width = abs(np.sin(angle_radian) * old_height) + abs(np.cos(angle_radian) * old_width)
+    height = abs(np.sin(angle_radian) * old_width) + abs(np.cos(angle_radian) * old_height)
+
+    image_center = tuple(np.array(image.shape[1::-1]) / 2)
+    rot_mat = cv2.getRotationMatrix2D(image_center, angle, 1.0)
+    rot_mat[1, 2] += (width - old_width) / 2
+    rot_mat[0, 2] += (height - old_height) / 2
+
+    return cv2.warpAffine(image, rot_mat, (int(round(height)), int(round(width))), borderValue=background)
 
 
 def copy_file(_resource, source_key, target_key):
@@ -71,38 +93,52 @@ def create_structure_and_copy(_resource, image_group_path, source_prefix,
 
 def process_image(local_file_path, image_name, dir_web):
 
-    img = Image.open(local_file_path)
-    dpi = img.info['dpi']
-    viewing = orientation['landscape'] if img.width >= img.height else orientation['portrait']
+    # img = Image.open(local_file_path)
+    # width = img.width
+    # height = img.height
+
+    # dpi = img.info['dpi']
+    #
     # img.load()
 
-    cv_image = cv2.imread(local_file_path)
-    grayscale = cv2.cvtColor(cv_image, cv2.COLOR_BGR2GRAY)
-    angle = determine_skew(grayscale)
-    rotated = process_rotate(cv_image, angle, (0, 0, 0))
-    cv2.imwrite('test22-rotate.jpg', rotated)
+    img = cv2.imread(local_file_path)
+    height, width, _ = img.shape
 
-    if flags['process_resize'] and all(i > 72 for i in dpi):
-        img.save(local_file_path, dpi=(72.0, 72.0))
+    if image_processing['resize'] and any(i > image_processing['scaling'] for i in [height, width]):
 
-    image_meta = {'width': img.width, 'height': img.height, 'dpi': dpi, 'viewing': viewing}
+        scale_percent = image_processing['scaling']/max([height, width])
+        width = int(img.shape[1] * scale_percent)
+        height = int(img.shape[0] * scale_percent)
+
+        img = cv2.resize(img, (width, height), interpolation=cv2.INTER_AREA)
+
+    viewing = orientation['landscape'] if width >= height else orientation['portrait']
+
+    if image_processing['rotate']:
+        grayscale = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        angle = determine_skew(grayscale)
+        img = process_rotate(img, angle, (0, 0, 0))
+
+    # overwrite img file
+    cv2.imwrite(local_file_path, img)
+
+    image_meta = {'width': width, 'height': height, 'viewing': viewing}
     image_processed_key = '/'.join((dir_web, image_name))
 
     return image_processed_key, image_meta
 
 
 def create_web_files(_resource, image_group_path):
+    _bucket = _resource.Bucket(TARGET_BUCKET_NAME)
+
     dir_images = '/'.join((image_group_path, scan_directories['images']))
     dir_web = '/'.join((image_group_path, scan_directories['web']))
-    _bucket = _resource.Bucket(TARGET_BUCKET_NAME)
-    # Preparing compressed and resized scans for web,
-    #     copy it from target_images_dir to target_web_dir
-    # TODO: resizing scans code here
-    renamed_image_listing = get_digital_ocean_images(_resource, f'{dir_images}/')
 
+    renamed_image_listing = get_digital_ocean_images(_resource, f'{dir_images}/')
+    if not renamed_image_listing:
+        return None
     # temp local directory for storing downloaded/processed image files
     local_dir_path = '/'.join(('data', '_tmp_images', dir_images))
-    print(local_dir_path)
 
     try:
         os.makedirs(local_dir_path)
@@ -127,7 +163,7 @@ def create_web_files(_resource, image_group_path):
         # add the image meta to image listing
         renamed_image_listing['images_dict'][image_name].update(image_meta)
 
-        if flags['process_upload']:
+        if flags['file_upload']:
             try:
                 _resource.meta.client.upload_file(
                     local_file_path,

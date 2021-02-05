@@ -39,7 +39,10 @@ def get_digital_ocean_images(_resource, source_address):
     image_listing = {}
     # paginate
     for page in page_iterator:
-        # print(page)
+
+        if 'Contents' not in page:
+            continue
+
         # page contents correspond to image groups
         images = []
         images_dict = {}

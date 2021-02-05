@@ -3,13 +3,17 @@ flags:
     create_web_files: True
     manifest: True
     process_all_images_for_manifest: True
-    process_resize: True
-    process_upload: True
-    download_overwrite: False
-    image_group_overwrite: False
+    file_upload: True
+    download_overwrite: True
+    image_group_overwrite: True
     test_run: False
 
-test_data: 'Ramachandran.tsv'
+image_processing:
+    resize: True
+    rotate: True
+    scaling: 2400
+
+test_data: 'Mantras.tsv'
 
 scan_directories:
     web: 'web'

@@ -14,6 +14,7 @@ global test_data_file
 global scan_directories
 global local_image_listing_file
 global orientation
+global image_scale_dimension
 
 load_dotenv()
 
@@ -35,3 +36,4 @@ with open('config.yaml') as c:
     scan_directories = config['scan_directories']
     local_image_listing_file = config['local_image_listing_file']
     orientation = config['orientation']
+    image_processing = config['image_processing']

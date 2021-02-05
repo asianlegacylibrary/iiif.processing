@@ -57,6 +57,7 @@ if __name__ == "__main__":
         debug_found_directories = []
         debug_exists_directories = []
         debug_not_found_directories = []
+        debug_requires_copy = []
 
         for line in csv_file:
             record = CsvLineClass._make(line.split('\t'))
@@ -106,6 +107,12 @@ if __name__ == "__main__":
 
             if flags['create_web_files']:
                 web_image_listing = create_web_files(_resource, image_group_path)
+                if web_image_listing is None:
+                    print(f'There is no image listing for {_SOURCE}. Please run copy segment...')
+                    if _SOURCE in debug_found_directories:
+                        debug_found_directories.remove(_SOURCE)
+                        debug_requires_copy.append(_SOURCE)
+                    continue
 
             if flags['manifest']:
                 if web_image_listing is None:
@@ -136,6 +143,11 @@ if __name__ == "__main__":
             if flags['test_run']:
                 quit()
 
+        # open CSV to write and output a named tuple for image groups
+        # need to gather the data along the way above...what is an image group record?
+        # image group id, image group path, manifest path, ???
+
         print(f'Processed TSV lines for: {debug_found_directories}')
         print(f'These titles not found in S3 staging: {debug_not_found_directories}')
         print(f'These directories skipped, already exist: {debug_exists_directories}')
+        print(f'These require to run COPY: {debug_requires_copy}')
