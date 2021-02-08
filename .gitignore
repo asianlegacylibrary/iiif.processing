@@ -6,6 +6,7 @@
 /_archive
 archive/
 _archive.py
+/config
 /manifests
 /data/_tmp_images
 log.txt
