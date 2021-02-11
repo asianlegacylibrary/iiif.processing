@@ -117,7 +117,8 @@ def process_image(local_file_path, image_name, dir_web):
     if image_processing['rotate']:
         grayscale = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         angle = determine_skew(grayscale)
-        img = process_rotate(img, angle, (0, 0, 0))
+        if angle is not None and float(angle):
+            img = process_rotate(img, angle, (0, 0, 0))
 
     # overwrite img file
     cv2.imwrite(local_file_path, img)

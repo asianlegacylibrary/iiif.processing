@@ -1,14 +1,6 @@
 import os
-import json
-import boto3
-from pprint import pprint as pretty
-from pathlib import Path
-import sys
-from config.config import config, spaces_dir
-from templates.placeholder_values import p as placeholder_values
-from functions import get_spaces_directory_files, go_through_directory, \
-    load_templates, update_json_placeholders, update_canvas_items, configure_logger, get_image_index, \
-    list_directory_files, list_test_directories, build_manifest_template_structure
+from config.config import spaces_dir
+from functions import configure_logger, list_directory_files, build_manifest_template_structure
 
 from dotenv import load_dotenv
 

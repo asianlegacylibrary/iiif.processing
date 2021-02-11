@@ -1,3 +1,8 @@
+logging_config:
+    filename: "log.txt"
+    mode: "w"
+    formatter: "%(name)s - %(levelname)s - %(message)s"
+
 flags:
     copy: True
     create_web_files: True
@@ -5,8 +10,10 @@ flags:
     process_all_images_for_manifest: True
     file_upload: True
     download_overwrite: True
-    image_group_overwrite: True
-    test_run: False
+    image_group_overwrite: False
+    test_run: True
+    input_from_file: False
+    copy_input: True
 
 image_processing:
     resize: True
@@ -20,18 +27,39 @@ scan_directories:
     sources: 'sources'
     images: 'images'
 
-local_image_listing_file: 'data/image_listing.json'
+catalog_field_names:
+    item_uid: 'itemuid'
+    directory_path: 'directory_path'
 
-google_sheets:
+local_image_listing_file: 'data/image_listing.json'
+local_source_input_file: 'Mantras.tsv'
+
+google:
     scope:
         - "https://spreadsheets.google.com/feeds"
         - "https://www.googleapis.com/auth/drive"
     credentials:
         iiif: "config/credentials.json"
         nlm: "config/credentials_gs_old.json"
+        acip: "config/ACIP_credentials.json"
+    sheets:
+        test:
+            spreadsheet_input_id: "1NZPbJArxgaAn3x-u5n0zqUxxK2yskd2KoPRmfHx05vE"
+            spreadsheet_output_id: "1NZPbJArxgaAn3x-u5n0zqUxxK2yskd2KoPRmfHx05vE"
+            sheet_input_name: "INPUT"
+            sheet_output_name: "OUTPUT"
+        ramachandran:
+            spreadsheet_input_id: "1-YPHZj1-YVPs7FW0p5IFKgw4qcGCRklg4WdmDEHuQZs"
+            spreadsheet_output_id: "1NZPbJArxgaAn3x-u5n0zqUxxK2yskd2KoPRmfHx05vE"
+            sheet_input_name: "New"
+            sheet_output_name: "output"
     sheet_key: "1-YPHZj1-YVPs7FW0p5IFKgw4qcGCRklg4WdmDEHuQZs"
     sheet_key_test: "1scb2UMLbuuDoGYlnOcFvpW9ZjC54Z6bbiEUeEj-LQQs"
     sheet_mongolia_test: "1SLgnUq4ohrAODB-XNQ6oiVqQxxJmeR0IQPozSpW6xiw"
+    sheet_iiif_test: "1NZPbJArxgaAn3x-u5n0zqUxxK2yskd2KoPRmfHx05vE"
+    sheet_ramachandran: "1-YPHZj1-YVPs7FW0p5IFKgw4qcGCRklg4WdmDEHuQZs"
+    sheet_input: "new"
+    sheet_output: "output"
     sheet_names_filter: "new"
     sheet_mongolia_filter: "acip-title-level"
 

@@ -19,14 +19,21 @@ def update_seq(page, seq_template):
 def update_meta(record):
     # Subject, Title, Description, Author, AuthorDate, Commentary, Language, Script, Material,
     # Size_inches, Library, Folios, Publication, Year, Edition,
-    meta_listing = []
 
-    for field_name, value in record._asdict().items():
+    meta_listing = []
+    for field_name, value in record.items():
         if value:
             # print(f'{field_name}: {value}')
             meta_listing.append({'label': field_name, 'value': value})
 
     return meta_listing
+
+    # for field_name, value in record._asdict().items():
+    #     if value:
+    #         # print(f'{field_name}: {value}')
+    #         meta_listing.append({'label': field_name, 'value': value})
+    #
+    # return meta_listing
 
 
 def build_manifest(page, manifest_template, canvas_template, seq_template, record):
@@ -34,8 +41,8 @@ def build_manifest(page, manifest_template, canvas_template, seq_template, recor
     record_values = {
         **manifest_values,
         **{
-            'manifest_title': record.Title,
-            'manifest_description': record.Description
+            'manifest_title': record.title,
+            'manifest_description': record.description
         }
     }
 

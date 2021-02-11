@@ -10,6 +10,23 @@ def list_test_directories():
     return result
 
 
+def list_all_directories(_client, bucket='acip'):
+    op = dict(operation_parameters)
+    op['Prefix'] = main_directory
+    op['Bucket'] = bucket
+    dirs = []
+
+    try:
+        result = _client.list_objects(**op)
+    except ClientError as e:
+        print('error', e)
+        return None
+    response = s3.list_objects_v2(
+        Bucket=BUCKET,
+        Prefix='DIR1/DIR2',
+        MaxKeys=100)
+
+
 def list_client_directories(_client, bucket='acip', main_directory=''):
     op = dict(operation_parameters)
     op['Prefix'] = main_directory
