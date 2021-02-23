@@ -105,7 +105,7 @@ if __name__ == "__main__":
     sheet_config = get_sheet_id(_sheets, **sheet_config)
 
     print(sheet_config)
-    quit()
+
     # COPY INPUT DATA TO WORKING SHEET, not necessary but safer
     # if flags['copy_input']:
     #     sheet_config = copy_input(_sheets, **sheet_config)
