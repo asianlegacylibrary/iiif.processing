@@ -16,6 +16,7 @@ global scan_directories
 global local_image_listing_file
 global orientation
 global image_scale_dimension
+global image_min_size
 global catalog_field_names
 
 global debug_found_directories
@@ -99,6 +100,7 @@ with open('config.yaml') as c:
     local_source_input_file = f'data/{config["local_source_input_file"]}'
     orientation = config['orientation']
     image_processing = config['image_processing']
+    image_min_size = config['MIN_IMAGE_SIZE']
     google = config['google']
     logging_config = config['logging_config']
     catalog_field_names = config['catalog_field_names']

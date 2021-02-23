@@ -1,17 +1,17 @@
 import os
 import boto3
 from botocore.exceptions import ClientError
-from config.config import MIN_IMAGE_SIZE, BUCKET_ENDPOINT, operation_parameters, config, SOURCE_BUCKET_TEST_ENDPOINT
+from settings import operation_params, image_min_size, operation_parameters_archive, target_bucket
 
 
-def list_test_directories():
-    client = boto3.client('s3', **config)
-    result = client.list_objects(**operation_parameters)
+def list_test_directories(**kwargs):
+    client = boto3.client('s3', **kwargs)
+    result = client.list_objects(**operation_params)
     return result
 
 
-def list_all_directories(_client, bucket='acip'):
-    op = dict(operation_parameters)
+def list_all_directories(_client, main_directory='/', bucket='acip'):
+    op = dict(operation_params)
     op['Prefix'] = main_directory
     op['Bucket'] = bucket
     dirs = []
@@ -22,13 +22,13 @@ def list_all_directories(_client, bucket='acip'):
         print('error', e)
         return None
     response = s3.list_objects_v2(
-        Bucket=BUCKET,
+        Bucket=bucket,
         Prefix='DIR1/DIR2',
         MaxKeys=100)
 
 
 def list_client_directories(_client, bucket='acip', main_directory=''):
-    op = dict(operation_parameters)
+    op = dict(operation_parameters_archive)
     op['Prefix'] = main_directory
     op['Bucket'] = bucket
     dirs = []
@@ -47,7 +47,8 @@ def list_client_directories(_client, bucket='acip', main_directory=''):
 
 
 def get_digital_ocean_images(_resource, source_address):
-    op = dict(operation_parameters)
+    op = dict(operation_parameters_archive)
+    op['Bucket'] = target_bucket
     op['Prefix'] = source_address
 
     paginator = _resource.meta.client.get_paginator('list_objects')
@@ -66,7 +67,7 @@ def get_digital_ocean_images(_resource, source_address):
         page_key = page['ResponseMetadata'].get('RequestId',
                                                 'some_key')  # need a random key gen if no req id present
         for group in page['Contents']:
-            if group.get('Size', 0) < MIN_IMAGE_SIZE:
+            if group.get('Size', 0) < image_min_size:
                 continue
             [dir_path, image_name] = os.path.split(group.get('Key'))
             images.append(image_name)
