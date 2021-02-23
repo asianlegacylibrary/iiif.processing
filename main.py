@@ -36,7 +36,7 @@ if __name__ == "__main__":
     # catalog data found in Google Sheets currently
     _sheets, _ = authorize_google(**google)  # can also obtain _drive service here
     # set config details for which sheets act as I/O
-    sheet_config = set_google_sheets(input_name='test', **google)
+    sheet_config = set_google_sheets(input_name='test_input', output_name='test_output', **google)
     sheet_config = get_sheet_id(_sheets, **sheet_config)
 
     print(sheet_config)

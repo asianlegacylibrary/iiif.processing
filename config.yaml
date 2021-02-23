@@ -43,11 +43,18 @@ google:
         nlm: "config/credentials_gs_old.json"
         acip: ".acip_creds.json"
     sheets:
-        test:
-            spreadsheet_input_id: "1NZPbJArxgaAn3x-u5n0zqUxxK2yskd2KoPRmfHx05vE"
-            spreadsheet_output_id: "1NZPbJArxgaAn3x-u5n0zqUxxK2yskd2KoPRmfHx05vE"
-            sheet_input_name: "INPUT"
-            sheet_output_name: "OUTPUT"
+        main_output:
+            spreadsheet_id: "1NZPbJArxgaAn3x-u5n0zqUxxK2yskd2KoPRmfHx05vE"
+            sheet_name: "OUTPUT"
+        ramachandra_input:
+            spreadsheet_id: "1-YPHZj1-YVPs7FW0p5IFKgw4qcGCRklg4WdmDEHuQZs"
+            sheet_name: "New"
+        test_input:
+            spreadsheet_id: "1NZPbJArxgaAn3x-u5n0zqUxxK2yskd2KoPRmfHx05vE"
+            sheet_name: "INPUT"
+        test_output:
+            spreadsheet_id: "1NZPbJArxgaAn3x-u5n0zqUxxK2yskd2KoPRmfHx05vE"
+            sheet_name: "OUTPUT"
         ramachandran:
             spreadsheet_input_id: "1-YPHZj1-YVPs7FW0p5IFKgw4qcGCRklg4WdmDEHuQZs"
             spreadsheet_output_id: "1NZPbJArxgaAn3x-u5n0zqUxxK2yskd2KoPRmfHx05vE"

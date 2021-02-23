@@ -46,6 +46,13 @@ def build_args(argv=None):
     parser.set_defaults(**defaults_dict)
 
     # add command line args here
+    parser.add_argument('-i',
+                        '--input',
+                        help='input google sheets')
+    parser.add_argument('-o',
+                        '--output',
+                        help='output google sheets')
+
     parser.add_argument('-c',
                         '--copy',
                         action='store_true',
@@ -68,8 +75,8 @@ if __name__ == "__main__":
     # sys.exit(main())
     args = build_args()
     print(f'current working directory: {os.path.abspath(os.path.curdir)}')
-    print(f'Processing steps: COPY={args.copy} // WEB={args.web} // MANIFEST={args.manifest}')
-
+    print(f'Processing steps for INPUT {args.input} to OUTPUT {args.output}: COPY={args.copy} // WEB={args.web} // MANIFEST={args.manifest}')
+    quit()
     # set up error logs
     configure_logger()
 
@@ -106,7 +113,7 @@ if __name__ == "__main__":
     # DOWNLOAD DATA TO DATAFRAME ####################################
     input_data = get_sheet_data(_sheets, **sheet_config)
     print(f'shape of data is {input_data.shape}')
-    quit()
+
     # FUZZY MATCHING BETWEEN SCAN DIRECTORIES AND CATALOG TITLES ####
     # lots of differences between the two, so need robust way to match
     # Note: made small change to string_grouper function for match_most_similar

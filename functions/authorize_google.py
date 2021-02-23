@@ -172,18 +172,21 @@ def copy_input(service, **sheet_config):
     }
 
 
-def set_google_sheets(input_name=None, **kwargs):
+def set_google_sheets(input_name=None, output_name=None, **kwargs):
     if input_name is None:
         # The ID of the spreadsheet containing the sheet to copy.
-        spreadsheet_input_id = kwargs['sheets']['test']['spreadsheet_input_id']
-        spreadsheet_output_id = kwargs['sheets']['test']['spreadsheet_output_id']
-        sheet_input_name = kwargs['sheets']['test']['sheet_input_name']
-        sheet_output_name = kwargs['sheets']['test']['sheet_output_name']
+        spreadsheet_input_id = kwargs['sheets']['test_input']['spreadsheet_id']
+        sheet_input_name = kwargs['sheets']['test_input']['sheet_name']
     else:
-        spreadsheet_input_id = kwargs['sheets'][input_name]['spreadsheet_input_id']
-        spreadsheet_output_id = kwargs['sheets'][input_name]['spreadsheet_output_id']
-        sheet_input_name = kwargs['sheets'][input_name]['sheet_input_name']
-        sheet_output_name = kwargs['sheets'][input_name]['sheet_output_name']
+        spreadsheet_input_id = kwargs['sheets'][input_name]['spreadsheet_id']
+        sheet_input_name = kwargs['sheets'][input_name]['sheet_name']
+
+    if output_name is None:
+        spreadsheet_output_id = kwargs['sheets']['test_output']['spreadsheet_id']
+        sheet_output_name = kwargs['sheets']['test_output']['sheet_name']
+    else:
+        spreadsheet_output_id = kwargs['sheets'][output_name]['spreadsheet_id']
+        sheet_output_name = kwargs['sheets'][output_name]['sheet_name']
 
     return {'sheet_input_name': sheet_input_name, 'sheet_output_name': sheet_output_name,
             'sheet_input_id': None, 'spreadsheet_input_id': spreadsheet_input_id,
