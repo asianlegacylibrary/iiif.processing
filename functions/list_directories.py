@@ -54,6 +54,7 @@ def get_digital_ocean_images(_resource, source_address):
     paginator = _resource.meta.client.get_paginator('list_objects')
     page_iterator = paginator.paginate(**op)
 
+
     image_listing = {}
     # paginate
     for page in page_iterator:
