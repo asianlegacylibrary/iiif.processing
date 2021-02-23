@@ -76,7 +76,7 @@ if __name__ == "__main__":
     args = build_args()
     print(f'current working directory: {os.path.abspath(os.path.curdir)}')
     print(f'Processing steps for INPUT {args.input} to OUTPUT {args.output}: COPY={args.copy} // WEB={args.web} // MANIFEST={args.manifest}')
-    quit()
+
     # set up error logs
     configure_logger()
 
@@ -101,11 +101,11 @@ if __name__ == "__main__":
     # catalog data found in Google Sheets currently
     _sheets, _ = authorize_google(**google)  # can also obtain _drive service here
     # set config details for which sheets act as I/O
-    sheet_config = set_google_sheets(input_name='test', **google)
+    sheet_config = set_google_sheets(input_name=args.input, output_name=args.output, **google)
     sheet_config = get_sheet_id(_sheets, **sheet_config)
 
     print(sheet_config)
-
+    quit()
     # COPY INPUT DATA TO WORKING SHEET, not necessary but safer
     # if flags['copy_input']:
     #     sheet_config = copy_input(_sheets, **sheet_config)
