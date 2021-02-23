@@ -41,7 +41,7 @@ google:
     credentials:
         iiif: "config/credentials.json"
         nlm: "config/credentials_gs_old.json"
-        acip: "config/.acip_creds.json"
+        acip: ".acip_creds.json"
     sheets:
         test:
             spreadsheet_input_id: "1NZPbJArxgaAn3x-u5n0zqUxxK2yskd2KoPRmfHx05vE"
