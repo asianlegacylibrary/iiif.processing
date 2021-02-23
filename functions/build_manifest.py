@@ -3,7 +3,7 @@ import os
 import json
 
 from functions import get_image_index, update_canvas_items, update_json_placeholders
-from config.config import MANIFEST_ALL_IMAGES, MANIFEST_SAVE_DIR, ACIP_PYTHON_DIR
+from settings import MANIFEST_DIR
 from templates.placeholder_values import manifest_values
 
 
@@ -27,13 +27,6 @@ def update_meta(record):
             meta_listing.append({'label': field_name, 'value': value})
 
     return meta_listing
-
-    # for field_name, value in record._asdict().items():
-    #     if value:
-    #         # print(f'{field_name}: {value}')
-    #         meta_listing.append({'label': field_name, 'value': value})
-    #
-    # return meta_listing
 
 
 def build_manifest(page, manifest_template, canvas_template, seq_template, record):
@@ -89,22 +82,21 @@ def build_manifest(page, manifest_template, canvas_template, seq_template, recor
                 for image_seq, (image_num, image_name, image_ext, image_width, image_height) in \
                         enumerate(ordered_image_listing, start=start_page):
                     # create canvas for image
-                    if MANIFEST_ALL_IMAGES:  # or (start_page <= image_num <= end_page):
-                        replacement_items = {
-                            "image_name": image_name,
-                            "image_seq": image_seq,
-                            "image_num": image_num,
-                            "width": image_width,
-                            "height": image_height,
-                            "group_name": page['path']
-                        }
-                        update_items = update_canvas_items(manifest_values, **replacement_items)
-                        current_canvas = update_json_placeholders(canvas_template, update_items)
-                        canvas.append(current_canvas)
+                    replacement_items = {
+                        "image_name": image_name,
+                        "image_seq": image_seq,
+                        "image_num": image_num,
+                        "width": image_width,
+                        "height": image_height,
+                        "group_name": page['path']
+                    }
+                    update_items = update_canvas_items(manifest_values, **replacement_items)
+                    current_canvas = update_json_placeholders(canvas_template, update_items)
+                    canvas.append(current_canvas)
 
             seq.update({"canvases": canvas})
 
-    manifest_path = os.path.join(ACIP_PYTHON_DIR, MANIFEST_SAVE_DIR, f'{page["key"]}_p{start_page}_p{image_seq}.json')
+    manifest_path = os.path.join(MANIFEST_DIR, f'{page["key"]}_p{start_page}_p{image_seq}.json')
 
     with open(manifest_path, 'w') as m:
         json.dump(manifest_structure, m)

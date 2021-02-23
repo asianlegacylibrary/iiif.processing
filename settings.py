@@ -33,8 +33,12 @@ global _resource
 global _client
 
 global ROOT_DIR
+global TEMPLATE_DIR
+global MANIFEST_DIR
 
 global logging_config
+
+global operation_params
 
 load_dotenv()
 
@@ -44,6 +48,18 @@ spaces = {
     'aws_access_key_id': os.environ.get("AWS_KEY"),
     'aws_secret_access_key': os.environ.get("AWS_SECRET")
 }
+
+operation_params = {
+    'Bucket': '',
+    'Body': 'Contents',
+    'Key': ''
+}
+
+operation_parameters_archive = {
+    'Bucket': '',
+    'Delimiter': '/'
+}
+
 
 # get session / resource for S3
 _session = boto3.session.Session()
@@ -64,6 +80,7 @@ s_template = '_sequence_template.json'
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 TEMPLATE_DIR = os.path.join(ROOT_DIR, 'templates')
+MANIFEST_DIR = os.path.join(ROOT_DIR, 'manifests')
 
 # create the structure for manifests
 manifest_template, canvas_template, seq_template = load_templates(TEMPLATE_DIR, m_template, c_template, s_template)

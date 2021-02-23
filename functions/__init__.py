@@ -1,5 +1,4 @@
 # manifest functions
-from .get_spaces_directory_files import get_spaces_directory_files, go_through_directory
 
 from .update_document_placeholders import update_json_placeholders, update_canvas_items, update_sequence
 from .get_image_index import get_image_index, get_trailing_number, standardize_digits

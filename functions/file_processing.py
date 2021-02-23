@@ -5,8 +5,8 @@ from pathlib import Path
 import botocore
 from PIL import Image
 
-from settings import flags, scan_directories, orientation, image_processing
-from config.config import SOURCE_BUCKET_NAME, TARGET_BUCKET_NAME, put_objs
+from settings import flags, scan_directories, orientation, image_processing, source_bucket, target_bucket, \
+    operation_params
 from functions import get_digital_ocean_images, standardize_digits
 from typing import Tuple, Union
 import numpy as np
@@ -43,14 +43,14 @@ def copy_file(_resource, source_key, target_key):
     """
 
     copy_source = {
-        'Bucket': SOURCE_BUCKET_NAME,
+        'Bucket': source_bucket,
         'Key': source_key,
     }
 
     try:
         _resource.meta.client.copy(
             copy_source,
-            Bucket=TARGET_BUCKET_NAME,
+            Bucket=target_bucket,
             Key=target_key,
         )
     except botocore.exceptions.ClientError:
@@ -60,7 +60,8 @@ def copy_file(_resource, source_key, target_key):
 def create_structure_and_copy(_resource, image_group_path, source_prefix,
                               image_listing, image_group_id):
     # Create target path objects in S3 bucket
-    put_params = dict(put_objs)
+    put_params = dict(operation_params)
+    put_params['Bucket'] = target_bucket
 
     dir_sources = '/'.join((image_group_path, scan_directories['sources']))
     dir_images = '/'.join((image_group_path, scan_directories['images']))
@@ -130,7 +131,7 @@ def process_image(local_file_path, image_name, dir_web):
 
 
 def create_web_files(_resource, image_group_path):
-    _bucket = _resource.Bucket(TARGET_BUCKET_NAME)
+    _bucket = _resource.Bucket(target_bucket)
 
     dir_images = '/'.join((image_group_path, scan_directories['images']))
     dir_web = '/'.join((image_group_path, scan_directories['web']))
@@ -168,7 +169,7 @@ def create_web_files(_resource, image_group_path):
             try:
                 _resource.meta.client.upload_file(
                     local_file_path,
-                    TARGET_BUCKET_NAME,
+                    target_bucket,
                     image_processed_key,
                     ExtraArgs={'ContentType': 'image/jpeg', 'ACL': 'public-read'}
                 )
@@ -191,7 +192,7 @@ def upload_manifest(_resource, local_manifest, new_manifest_key):
     try:
         _resource.meta.client.upload_file(
             local_manifest,
-            TARGET_BUCKET_NAME,
+            target_bucket,
             new_manifest_key,
             ExtraArgs={'ContentType': 'application/json', 'ACL': 'public-read'}
         )
