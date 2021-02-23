@@ -6,10 +6,10 @@ from functions import configure_logger, authorize_google, get_sheet_data, proces
     set_google_sheets, get_sheet_id, list_client_directories, write_sheet_data, build_args
 
 
-def main(args):
+def main(options):
     print(f'current working directory: {os.path.abspath(os.path.curdir)}')
     print(
-        f'Processing steps for INPUT {args.input} to OUTPUT {args.output}: COPY={args.copy} // WEB={args.web} // MANIFEST={args.manifest}')
+        f'Processing steps for INPUT {options["input"]} to OUTPUT {options["output"]}: COPY={options["copy"]} // WEB={options["web"]} // MANIFEST={options["manifest"]}')
 
     # set up error logs
     configure_logger()
@@ -70,7 +70,7 @@ def main(args):
     # 1. Create proper DO directory structure (source, images, web)
     # 2. Process web directory files (tilt and resolution)
     # 3. Create manifest
-    process_dataframe(full_input, args)
+    process_dataframe(full_input, options)
 
     # and write image group records to Google Sheets (get to MySQL for indexing at some point)
     write_sheet_data(_sheets, pd.DataFrame(image_group_records), output_name='image_groups', **sheet_config)
@@ -79,6 +79,6 @@ def main(args):
 if __name__ == "__main__":
     # sys.exit(main())
     args = build_args()
-    print(args)
-    main(args)
-
+    args_dict = vars(args)
+    print(args_dict)
+    main(args_dict)

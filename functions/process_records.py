@@ -37,9 +37,9 @@ def process_file(data):
     write_results_to_terminal()
 
 
-def process_dataframe(data, args):
+def process_dataframe(data, options):
     tqdm.pandas()
-    data.progress_apply(lambda x: process_record(x, args, web_image_listing=None), axis=1)
+    data.progress_apply(lambda x: process_record(x, options, web_image_listing=None), axis=1)
     write_results_to_terminal()
 
 
@@ -48,7 +48,7 @@ def process_dataframe(data, args):
 # RECORD = 1 image group, 1 manifest, multiple images
 # manifest is the viewing data for an image group
 # need to create an ITEM record that links to the image group
-def process_record(record, args, web_image_listing):
+def process_record(record, options, web_image_listing):
     # define necessary fields from record, create image group vars
     item_uid = record[catalog_field_names['item_uid']]
     digital_ocean_dir_path = record[catalog_field_names['directory_path']]
@@ -56,10 +56,8 @@ def process_record(record, args, web_image_listing):
     image_group_id = 'IG.' + item_uid + '.001'
     image_group_path = '/'.join((target_bucket_endpoint, item_uid, image_group_id))
 
-    print(args)
-    quit()
     # check if processed directory already exists in digital ocean S3
-    if not args.image_group_overwrite:
+    if not options["image_group_overwrite"]:
         results = _client.list_objects(Bucket=target_bucket, Prefix=image_group_path)
         if 'Contents' in results:
             debug_exists_directories.append(image_group_path)
@@ -69,13 +67,13 @@ def process_record(record, args, web_image_listing):
     image_listing = get_digital_ocean_images(_resource, digital_ocean_dir_path)
 
     # COPY // Copy images from staging and create a directory structure for (source, images, web)
-    if args['copy']:
+    if options["copy"]:
         create_structure_and_copy(_resource, image_group_path,
                                   digital_ocean_dir_path, image_listing, image_group_id)
 
     # PROCESS // Process the images for the web folder (these are for the manifest)
     # currently this involves resolution and tilt
-    if args['create_web_files']:
+    if options["web"]:
         web_image_listing = create_web_files(_resource, image_group_path)
         if web_image_listing is None:
             debug_requires_copy.append(digital_ocean_dir_path)
@@ -95,7 +93,7 @@ def process_record(record, args, web_image_listing):
         })
 
     # MANIFEST // Generate the manifest.json for the IIIF server
-    if args['manifest']:
+    if options["manifest"]:
         if web_image_listing is None:
             dir_images = '/'.join((image_group_path, scan_directories['images']))
             local_dir_path = '/'.join(('data', '_tmp_images', dir_images))
