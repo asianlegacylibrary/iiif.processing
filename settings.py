@@ -5,41 +5,7 @@ import boto3
 from templates.load_template_settings import load_templates
 
 # define global config settings
-global spaces
-global flags
-global target_bucket
-global source_bucket
-global target_bucket_endpoint
-global source_bucket_endpoint
-global test_data_file
-global scan_directories
-global local_image_listing_file
-global orientation
-global image_scale_dimension
-global image_min_size
-global catalog_field_names
-
-global debug_found_directories
-global debug_exists_directories
-global debug_not_found_directories
-global debug_requires_copy
-
-global image_group_records
-
-global m_template
-global c_template
-global s_template
-global _session
-global _resource
-global _client
-
-global ROOT_DIR
-global TEMPLATE_DIR
-global MANIFEST_DIR
-
-global logging_config
-
-global operation_params
+# do not need to make these globals...what are globals for?
 
 load_dotenv()
 

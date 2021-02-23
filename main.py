@@ -1,16 +1,15 @@
 import os
 import pandas as pd
-from string_grouper import match_strings, match_most_similar, group_similar_strings, StringGrouper
-from settings import flags, google, _client, source_bucket_endpoint, image_group_records
+from string_grouper import match_most_similar
+from settings import google, _client, source_bucket_endpoint, image_group_records
 from functions import configure_logger, authorize_google, get_sheet_data, process_dataframe, \
-    copy_input, set_google_sheets, get_sheet_id, list_client_directories, write_sheet_data, get_digital_ocean_images
+    set_google_sheets, get_sheet_id, list_client_directories, write_sheet_data, build_args
 
 
-# NOTE: settings.py is prepping all options / config
-
-if __name__ == "__main__":
+def main(args):
     print(f'current working directory: {os.path.abspath(os.path.curdir)}')
-    print(f'Processing steps: COPY={flags["copy"]} // WEB={flags["create_web_files"]} // MANIFEST={flags["manifest"]}')
+    print(
+        f'Processing steps for INPUT {args.input} to OUTPUT {args.output}: COPY={args.copy} // WEB={args.web} // MANIFEST={args.manifest}')
 
     # set up error logs
     configure_logger()
@@ -36,10 +35,11 @@ if __name__ == "__main__":
     # catalog data found in Google Sheets currently
     _sheets, _ = authorize_google(**google)  # can also obtain _drive service here
     # set config details for which sheets act as I/O
-    sheet_config = set_google_sheets(input_name='test_input', output_name='test_output', **google)
+    sheet_config = set_google_sheets(input_name=args.input, output_name=args.output, **google)
     sheet_config = get_sheet_id(_sheets, **sheet_config)
 
     print(sheet_config)
+
     # COPY INPUT DATA TO WORKING SHEET, not necessary but safer
     # if flags['copy_input']:
     #     sheet_config = copy_input(_sheets, **sheet_config)
@@ -56,7 +56,7 @@ if __name__ == "__main__":
         'directory_name': pd.Series(list(scan_dirs.keys())),
         'directory_path': pd.Series(list(scan_dirs.values())),
         'matched_catalog_title': match_most_similar(input_data['title'], pd.Series(list(scan_dirs.keys())))
-         })
+    })
 
     # MERGE THE SCAN DIRECTORY NAME INTO THE CATALOG RECORDS #########
     # we'll only keep records that match, inner join
@@ -70,15 +70,15 @@ if __name__ == "__main__":
     # 1. Create proper DO directory structure (source, images, web)
     # 2. Process web directory files (tilt and resolution)
     # 3. Create manifest
-    process_dataframe(full_input)
+    process_dataframe(full_input, args)
 
     # and write image group records to Google Sheets (get to MySQL for indexing at some point)
     write_sheet_data(_sheets, pd.DataFrame(image_group_records), output_name='image_groups', **sheet_config)
+    return 0
 
-    # END ############################################################
+if __name__ == "__main__":
+    # sys.exit(main())
+    args = build_args()
+    print(args)
+    main(args)
 
-    # IF NOT USING GOOGLE SHEETS DATA, CAN PULL FROM LOCAL FILE ######
-    # if flags['input_from_file']:
-    #     with open(local_source_input_file, mode="rt", encoding="utf-8") as file:
-    #         # Remove all special symbols (spaces and #) from field names.
-    #         process_file(file)
