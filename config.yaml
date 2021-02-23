@@ -4,13 +4,13 @@ logging_config:
     formatter: "%(name)s - %(levelname)s - %(message)s"
 
 flags:
-    copy: True
+    copy: False
     create_web_files: True
-    manifest: True
+    manifest: False
     process_all_images_for_manifest: True
     file_upload: True
     download_overwrite: True
-    image_group_overwrite: False
+    image_group_overwrite: True
     test_run: True
     input_from_file: False
     copy_input: True

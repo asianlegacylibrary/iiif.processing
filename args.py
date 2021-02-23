@@ -1,28 +1,55 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
+# Import the argparse library
 import argparse
+from configparser import SafeConfigParser
 
-from _tools.create_s3_target_dirs import process_folders
+import os
+import sys
+
+# Create the parser
+parser = argparse.ArgumentParser(description='Process catalog and scan images to IIIF')
+
+# Add the arguments
+# ACTIONS, store_true means it is false unless specified, store_false means it is true unless specified
+
+# store_true
+# copy, --copy, -c // copy images and dir structure from staging to production
+# create_web_files, --web, -w // create web directory and process images for web
+# manifest, --manifest, -m // create and upload manifest
+# input_from_file, --file, -f // input data coming from a file, need to add PATH TO FILE if this is true
+
+# optional, if optional start with dash (-)
+parser.add_argument('-c',
+                    '--copy',
+                    action='store_true',
+                    help='copy images and dir structure from staging to production')
+
+# store_false
+# process_all_images_for_manifest: True
+# file_upload: True
+# download_overwrite: True
+# image_group_overwrite: True
+# test_run: True
+# copy_input: True
 
 
-DEFAULT_TSV_FILENAME = "tools/Mantras.tsv"
-DEFAULT_COPY_FLAG = 0
-DEFAULT_MANIFEST_FLAG = 0
-DEFAULT_SCALE_FLAG = 0
+# Execute parse_args()
+args = parser.parse_args()
 
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(add_help=True)
-    parser.add_argument('-t', '--tsv', type=str, action='store', help='input *.tsv filename (TSV file should contain list of tab-separated data lines for DigitalOcean folders to process)')
-    parser.add_argument('-c', '--copy', type=int, action='store', help='copy images flag (0|1)')
-    parser.add_argument('-m', '--manifest', type=int, action='store', help='create manifest flag (0|1)')
-    parser.add_argument('-r', '--resize', type=int, action='store', help='resize/tilt images flag (0|1)')
-    args = parser.parse_args()
 
-    tsv_filename = args.tsv or DEFAULT_TSV_FILENAME
-    copy_flag = int(args.copy or DEFAULT_COPY_FLAG)
-    manifest_flag = int(args.manifest or DEFAULT_MANIFEST_FLAG)
-    resize_flag = int(args.resize or DEFAULT_SCALE_FLAG)
 
-    print(f"tsv='{tsv_filename}', copy flag={copy_flag}, manifest flag={manifest_flag}, resize flag={resize_flag}")
-    process_folders(tsv_filename, copy_flag=copy_flag, manifest_flag=manifest_flag, resize_flag=resize_flag)
+
+# example positional arg
+# parser.add_argument('Path',
+#                        metavar='path',
+#                        type=str,
+#                        help='the path to list')
+# input_path = args.Path
+# if not os.path.isdir(input_path):
+#     print('The path specified does not exist')
+#     sys.exit()
+#
+# for line in os.listdir(input_path):
+#     if args.long:  # Simplified long listing
+#         size = os.stat(os.path.join(input_path, line)).st_size
+#         line = '%10d  %s' % (size, line)
+#     print(line)

@@ -4,7 +4,7 @@ import collections
 from tqdm import tqdm
 from settings import flags, target_bucket_endpoint, scan_directories, target_bucket, \
     debug_found_directories, debug_exists_directories, debug_requires_copy, \
-    manifest_template, canvas_template, seq_template, _client, _resource, catalog_field_names
+    manifest_template, canvas_template, seq_template, _client, _resource, catalog_field_names, image_group_records
 from functions import build_manifest, get_digital_ocean_images, create_structure_and_copy, \
     create_web_files, upload_manifest
 from classes import TermColors
@@ -14,6 +14,8 @@ def write_results_to_terminal():
     print(f'{TermColors.OKBLUE}Processed records for: {debug_found_directories}{TermColors.ENDC}')
     print(f'{TermColors.WARNING}These directories skipped, already exist: {debug_exists_directories}{TermColors.ENDC}')
     print(f'{TermColors.OKCYAN}These require to run COPY: {debug_requires_copy}{TermColors.ENDC}')
+
+    print(f'Processed image group records: {image_group_records}')
 
 
 def process_file(data):
@@ -41,6 +43,11 @@ def process_dataframe(data):
     write_results_to_terminal()
 
 
+# PROCESS RECORD ################################################
+# Each record represents an image group (group of images / scans)
+# RECORD = 1 image group, 1 manifest, multiple images
+# manifest is the viewing data for an image group
+# need to create an ITEM record that links to the image group
 def process_record(record, web_image_listing):
     # define necessary fields from record, create image group vars
     item_uid = record[catalog_field_names['item_uid']]
@@ -71,6 +78,19 @@ def process_record(record, web_image_listing):
         if web_image_listing is None:
             debug_requires_copy.append(digital_ocean_dir_path)
             return False
+
+        # Is there other data to add to the record here?
+        manifest_name = f'{item_uid}.{image_group_id}.manifest.json'
+        url_suffix = f'{target_bucket_endpoint}/{item_uid}/{image_group_id}'
+
+        # is this an item? that points to an image group?
+        image_group_records.append({
+            'manifest_url': f'https://{target_bucket}.sfo2.digitaloceanspaces.com/{url_suffix}/{manifest_name}',
+            'item_uid': item_uid,
+            'image_group_path': web_image_listing['path'],
+            'image_group_uid': image_group_id,
+            'number_of_images': len(web_image_listing['images'])
+        })
 
     # MANIFEST // Generate the manifest.json for the IIIF server
     if flags['manifest']:

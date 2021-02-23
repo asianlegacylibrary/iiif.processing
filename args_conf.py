@@ -1,16 +1,74 @@
+import argparse
+from configparser import ConfigParser
+import sys
 import os
 import pandas as pd
-from string_grouper import match_strings, match_most_similar, group_similar_strings, StringGrouper
+from string_grouper import match_most_similar
 from settings import flags, google, _client, source_bucket_endpoint, image_group_records
 from functions import configure_logger, authorize_google, get_sheet_data, process_dataframe, \
-    copy_input, set_google_sheets, get_sheet_id, list_client_directories, write_sheet_data, get_digital_ocean_images
+    set_google_sheets, get_sheet_id, list_client_directories, write_sheet_data
 
+def build_args(argv=None):
+    # Do argv default this way, as doing it in the functional
+    # declaration sets it at compile time.
+    if argv is None:
+        argv = sys.argv
 
-# NOTE: settings.py is prepping all options / config
+    # Parse any conf_file specification
+    # We make this parser with add_help=False so that
+    # it doesn't parse -h and print help.
+    defaults_parser = argparse.ArgumentParser(
+        description=__doc__,
+        # formatter_class=argparse.RawDescriptionHelpFormatter,
+        add_help=False
+    )
+
+    defaults_parser.add_argument("-d", "--defaults",
+                        help="Specify defaults config file", metavar="DEFAULTS")
+
+    args, remaining_argv = defaults_parser.parse_known_args()
+
+    # defaults = {"copy": False, "web": False, "manifest": False}
+    defaults_dict = {}
+
+    if args.defaults:
+        config = ConfigParser()
+        config.read([args.defaults])
+        defaults_dict.update(dict(config.items("Defaults")))
+
+    # print(defaults_dict)
+    # Parse rest of arguments
+    # Don't suppress add_help here so it will handle -h
+    parser = argparse.ArgumentParser(
+        # Inherit options from config_parser
+        parents=[defaults_parser]
+        )
+    parser.set_defaults(**defaults_dict)
+
+    # add command line args here
+    parser.add_argument('-c',
+                        '--copy',
+                        action='store_true',
+                        help='copy images and dir structure from staging to production')
+
+    parser.add_argument('-w',
+                        '--web',
+                        action='store_true',
+                        help='create web directory and process images for web')
+
+    parser.add_argument('-m',
+                        '--manifest',
+                        action='store_true',
+                        help='create and upload manifest')
+
+    args = parser.parse_args(remaining_argv)
+    return args
 
 if __name__ == "__main__":
+    # sys.exit(main())
+    args = build_args()
     print(f'current working directory: {os.path.abspath(os.path.curdir)}')
-    print(f'Processing steps: COPY={flags["copy"]} // WEB={flags["create_web_files"]} // MANIFEST={flags["manifest"]}')
+    print(f'Processing steps: COPY={args.copy} // WEB={args.web} // MANIFEST={args.manifest}')
 
     # set up error logs
     configure_logger()
@@ -40,6 +98,7 @@ if __name__ == "__main__":
     sheet_config = get_sheet_id(_sheets, **sheet_config)
 
     print(sheet_config)
+
     # COPY INPUT DATA TO WORKING SHEET, not necessary but safer
     # if flags['copy_input']:
     #     sheet_config = copy_input(_sheets, **sheet_config)
@@ -47,7 +106,7 @@ if __name__ == "__main__":
     # DOWNLOAD DATA TO DATAFRAME ####################################
     input_data = get_sheet_data(_sheets, **sheet_config)
     print(f'shape of data is {input_data.shape}')
-
+    quit()
     # FUZZY MATCHING BETWEEN SCAN DIRECTORIES AND CATALOG TITLES ####
     # lots of differences between the two, so need robust way to match
     # Note: made small change to string_grouper function for match_most_similar
@@ -56,7 +115,7 @@ if __name__ == "__main__":
         'directory_name': pd.Series(list(scan_dirs.keys())),
         'directory_path': pd.Series(list(scan_dirs.values())),
         'matched_catalog_title': match_most_similar(input_data['title'], pd.Series(list(scan_dirs.keys())))
-         })
+    })
 
     # MERGE THE SCAN DIRECTORY NAME INTO THE CATALOG RECORDS #########
     # we'll only keep records that match, inner join
@@ -74,11 +133,3 @@ if __name__ == "__main__":
 
     # and write image group records to Google Sheets (get to MySQL for indexing at some point)
     write_sheet_data(_sheets, pd.DataFrame(image_group_records), output_name='image_groups', **sheet_config)
-
-    # END ############################################################
-
-    # IF NOT USING GOOGLE SHEETS DATA, CAN PULL FROM LOCAL FILE ######
-    # if flags['input_from_file']:
-    #     with open(local_source_input_file, mode="rt", encoding="utf-8") as file:
-    #         # Remove all special symbols (spaces and #) from field names.
-    #         process_file(file)

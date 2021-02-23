@@ -117,12 +117,11 @@ def write_sheet_data(service, data, output_name=None, **kwargs):
     if output_name is None:
         output_name = kwargs['sheet_output_name']
 
-    sheets_meta = (service.spreadsheets().get(spreadsheetId=kwargs['spreadsheet_input_id']).execute())
+    sheets_meta = (service.spreadsheets().get(spreadsheetId=kwargs['spreadsheet_output_id']).execute())
     sheets = sheets_meta.get("sheets", "")
 
     # res = next((s for s in sheets if s['properties']['title'] == sheet_config['sheet_input_name']), None)
     if not any((s for s in sheets if s['properties']['title'] == output_name)):
-
         body = {
             'requests': [{
               "addSheet": {

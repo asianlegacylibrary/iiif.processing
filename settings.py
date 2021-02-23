@@ -22,6 +22,9 @@ global debug_found_directories
 global debug_exists_directories
 global debug_not_found_directories
 global debug_requires_copy
+
+global image_group_records
+
 global m_template
 global c_template
 global s_template
@@ -52,6 +55,8 @@ debug_found_directories = []
 debug_exists_directories = []
 debug_not_found_directories = []
 debug_requires_copy = []
+
+image_group_records = []
 
 m_template = '_manifest_template.json'
 c_template = '_canvas_template.json'
