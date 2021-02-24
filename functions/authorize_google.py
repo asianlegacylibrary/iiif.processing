@@ -6,6 +6,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from functools import reduce
 import pandas as pd
+from classes import Timer
 
 # If modifying these scopes, delete the file token.pickle.
 # SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly',
@@ -66,6 +67,7 @@ def authorize_google(**kwargs):
     return sheets_service, drive_service
 
 
+@Timer(name="input data")
 def get_sheet_data(service, **kwargs):
     sheet_range = f"{kwargs['sheet_input_name']}!A1:Z"
     # get data, transform to data frame

@@ -1,19 +1,29 @@
 import os
 import logging
 import pandas as pd
+from math import floor
 from string_grouper import match_most_similar
-from settings import google, _client, source_bucket_endpoint, image_group_records
+from settings import google, _client, source_bucket_endpoint, image_group_records, debug_found_directories
 from functions import configure_logger, authorize_google, get_sheet_data, process_dataframe, \
     set_google_sheets, get_sheet_id, list_client_directories, write_sheet_data, build_args
+from classes import Timer
 
 
-def main(options):
+# set up error logs
+configure_logger()
+
+if __name__ == "__main__":
+    # sys.exit(main())
+    # gather default options from file and command line
+    args = build_args()
+    options = vars(args)
+    logging.info(options)
+
     print(f'current working directory: {os.path.abspath(os.path.curdir)}')
     print(
         f'Processing steps for INPUT {options["input"]} to OUTPUT {options["output"]}: COPY={options["copy"]} // WEB={options["web"]} // MANIFEST={options["manifest"]}')
 
-    # set up error logs
-    configure_logger()
+
 
     # GET A LISTING OF ALL SCAN DIRECTORIES #########################
     digital_ocean_scan_dirs = []
@@ -75,11 +85,6 @@ def main(options):
 
     # and write image group records to Google Sheets (get to MySQL for indexing at some point)
     write_sheet_data(_sheets, pd.DataFrame(image_group_records), output_name='image_groups', **sheet_config)
-    return 0
 
-if __name__ == "__main__":
-    # sys.exit(main())
-    args = build_args()
-    args_dict = vars(args)
-    logging.info(args_dict)
-    main(args_dict)
+    avg_record_time = floor(Timer.timers['record']/len(debug_found_directories))
+    print(f'Avg time to process a record: {avg_record_time} seconds')

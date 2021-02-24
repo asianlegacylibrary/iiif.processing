@@ -7,7 +7,7 @@ from settings import flags, target_bucket_endpoint, scan_directories, target_buc
     manifest_template, canvas_template, seq_template, _client, _resource, catalog_field_names, image_group_records
 from functions import build_manifest, get_digital_ocean_images, create_structure_and_copy, \
     create_web_files, upload_manifest
-from classes import TermColors
+from classes import TermColors, Timer
 
 
 def write_results_to_terminal():
@@ -48,6 +48,7 @@ def process_dataframe(data, options):
 # RECORD = 1 image group, 1 manifest, multiple images
 # manifest is the viewing data for an image group
 # need to create an ITEM record that links to the image group
+@Timer(name="record")
 def process_record(record, options, web_image_listing):
     # define necessary fields from record, create image group vars
     item_uid = record[catalog_field_names['item_uid']]
