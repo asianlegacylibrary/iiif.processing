@@ -8,7 +8,6 @@ from functions import configure_logger, authorize_google, get_sheet_data, proces
     set_google_sheets, get_sheet_id, list_client_directories, write_sheet_data, build_args
 from classes import Timer
 
-
 # set up error logs
 configure_logger()
 
