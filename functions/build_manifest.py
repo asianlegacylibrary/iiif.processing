@@ -2,7 +2,7 @@ from pathlib import Path
 import os
 import json
 
-from functions import get_image_index, update_canvas_items, update_json_placeholders
+from functions import update_canvas_items, update_json_placeholders, standardize_digits
 from settings import MANIFEST_DIR
 from templates.placeholder_values import manifest_values
 
@@ -30,6 +30,7 @@ def update_meta(record):
 
 
 def build_manifest(page, manifest_template, canvas_template, seq_template, record):
+
 
     record_values = {
         **manifest_values,
@@ -72,12 +73,15 @@ def build_manifest(page, manifest_template, canvas_template, seq_template, recor
 
                 for image_name, meta in page['images_dict'].items():
                     image_ext = Path(image_name).suffix
-                    image_num = get_image_index(Path(image_name).stem)
+                    # image_num = get_image_index(Path(image_name).stem)
+                    image_num = standardize_digits(image_name)
                     image_width = meta['width']
                     image_height = meta['height']
                     ordered_image_listing.append((image_num, image_name, image_ext, image_width, image_height))
                 # sort images listing by extracted index:
                 ordered_image_listing.sort()
+
+
 
                 for image_seq, (image_num, image_name, image_ext, image_width, image_height) in \
                         enumerate(ordered_image_listing, start=start_page):

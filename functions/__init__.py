@@ -1,9 +1,11 @@
+from .parse_files import standardize_digits
 # manifest functions
 from .update_document_placeholders import update_json_placeholders, update_canvas_items, update_sequence
 from .build_manifest import build_manifest, update_meta
 
 # S3 BUCKET FUNCTIONS
-from .get_image_index import get_image_index, get_trailing_number, standardize_digits
+# from .parse_files import get_image_index, get_trailing_number, standardize_digits
+
 from .list_directories import list_test_directories, list_client_directories, get_digital_ocean_images
 from .file_processing import create_structure_and_copy, create_web_files, upload_manifest, process_image
 
