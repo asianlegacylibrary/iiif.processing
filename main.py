@@ -23,8 +23,6 @@ if __name__ == "__main__":
     print(
         f'Processing steps for INPUT {options["input"]} to OUTPUT {options["output"]}: COPY={options["copy"]} // WEB={options["web"]} // MANIFEST={options["manifest"]}')
 
-
-
     # GET A LISTING OF ALL SCAN DIRECTORIES #########################
     digital_ocean_scan_dirs = []
     for d in list_client_directories(_client, main_directory=source_bucket_endpoint):
