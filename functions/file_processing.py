@@ -1,6 +1,7 @@
 import os
 import errno
 import json
+import logging
 from pathlib import Path
 import botocore
 from PIL import Image
@@ -146,11 +147,11 @@ def create_web_files(_resource, image_group_path):
         os.makedirs(local_dir_path)
     except OSError as e:
         if e.errno != errno.EEXIST:
-            print(f"ERROR: creation of local image directory '{local_dir_path}' failed")
+            logging.error(f"ERROR: creation of local image directory '{local_dir_path}' failed")
     else:
-        print(f"created local image directory '{local_dir_path}'")
+        logging.info(f"created local image directory '{local_dir_path}'")
 
-    print(f'Download, process, and upload images for web...')
+    # print(f'Download, process, and upload images for web...')
     for image_name in renamed_image_listing['images']:
         # download image file from S3
         local_file_path = '/'.join((local_dir_path, image_name))
@@ -174,7 +175,7 @@ def create_web_files(_resource, image_group_path):
                     ExtraArgs={'ContentType': 'image/jpeg', 'ACL': 'public-read'}
                 )
             except botocore.exceptions.ClientError as e:
-                print('upload error', e)
+                logging.error('upload error', e)
 
     # if we've uploaded the images to web, then switch out path for manifest in next step
     renamed_image_listing['path'] = dir_web
@@ -187,7 +188,7 @@ def create_web_files(_resource, image_group_path):
 
 def upload_manifest(_resource, local_manifest, new_manifest_key):
 
-    print(f"uploading manifest: {new_manifest_key}")
+    logging.info(f"uploading manifest: {new_manifest_key}")
 
     try:
         _resource.meta.client.upload_file(
@@ -198,4 +199,4 @@ def upload_manifest(_resource, local_manifest, new_manifest_key):
         )
 
     except botocore.exceptions.ClientError as e:
-        print('upload error', e)
+        logging.error('upload error', e)

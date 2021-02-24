@@ -13,7 +13,7 @@ def configure_logger():
     # levels: debug, info, warning, error, critical
     # example --> logging.warning('This will get logged to a file')
     logging.basicConfig(
-        # level=logging.DEBUG,
+        level=logging.INFO,
         filename=logging_config["filename"],
         filemode=logging_config["mode"],
         format=logging_config["formatter"]

@@ -1,4 +1,5 @@
 import os
+import logging
 import pandas as pd
 from string_grouper import match_most_similar
 from settings import google, _client, source_bucket_endpoint, image_group_records
@@ -29,7 +30,7 @@ def main(options):
             continue
         scan_dirs[key] = s
 
-    print(list(scan_dirs.keys()))
+    logging.info(list(scan_dirs.keys()))
 
     # GET CATALOG DATA ##############################################
     # catalog data found in Google Sheets currently
@@ -80,5 +81,5 @@ if __name__ == "__main__":
     # sys.exit(main())
     args = build_args()
     args_dict = vars(args)
-    print(args_dict)
+    logging.info(args_dict)
     main(args_dict)
