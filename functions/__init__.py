@@ -5,9 +5,10 @@ from .build_manifest import build_manifest, update_meta
 
 # S3 BUCKET FUNCTIONS
 # from .parse_files import get_image_index, get_trailing_number, standardize_digits
-
-from .list_directories import list_test_directories, list_client_directories, get_digital_ocean_images
-from .file_processing import create_structure_and_copy, create_web_files, upload_manifest, process_image
+from .set_policy import create_bucket_policy
+from .list_directories import list_test_directories, list_client_directories, get_image_listing
+from .file_processing import create_structure_and_copy, create_web_files, upload_manifest, process_image, copy_file, \
+    download_image_for_meta
 
 # GOOGLE SHEETS
 from .authorize_google import authorize_google, get_sheet_data, write_sheet_data, copy_input, \

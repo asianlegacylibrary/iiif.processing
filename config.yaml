@@ -28,8 +28,9 @@ scan_directories:
     images: 'images'
 
 catalog_field_names:
-    item_uid: 'itemuid'
+    item_uid: 'item_uid'
     directory_path: 'directory_path'
+    image_group_uid: 'image_group_uid'
 
 local_image_listing_file: 'data/image_listing.json'
 local_source_input_file: 'Mantras.tsv'
@@ -48,7 +49,7 @@ google:
             sheet_name: "OUTPUT"
         ramachandra_input:
             spreadsheet_id: "1-YPHZj1-YVPs7FW0p5IFKgw4qcGCRklg4WdmDEHuQZs"
-            sheet_name: "New"
+            sheet_name: "New_2"
         test_input:
             spreadsheet_id: "1NZPbJArxgaAn3x-u5n0zqUxxK2yskd2KoPRmfHx05vE"
             sheet_name: "INPUT"
@@ -60,6 +61,11 @@ google:
             spreadsheet_output_id: "1NZPbJArxgaAn3x-u5n0zqUxxK2yskd2KoPRmfHx05vE"
             sheet_input_name: "New"
             sheet_output_name: "output"
+        ramachandran_2:
+            spreadsheet_input_id: "1-YPHZj1-YVPs7FW0p5IFKgw4qcGCRklg4WdmDEHuQZs"
+            spreadsheet_output_id: "1NZPbJArxgaAn3x-u5n0zqUxxK2yskd2KoPRmfHx05vE"
+            sheet_input_name: "New_2"
+            sheet_output_name: "output_2"
     sheet_key: "1-YPHZj1-YVPs7FW0p5IFKgw4qcGCRklg4WdmDEHuQZs"
     sheet_key_test: "1scb2UMLbuuDoGYlnOcFvpW9ZjC54Z6bbiEUeEj-LQQs"
     sheet_mongolia_test: "1SLgnUq4ohrAODB-XNQ6oiVqQxxJmeR0IQPozSpW6xiw"
@@ -70,11 +76,22 @@ google:
     sheet_names_filter: "new"
     sheet_mongolia_filter: "acip-title-level"
 
-digital_ocean:
-    source_bucket: 'acip'
-    target_bucket: 'acip'
-    target_bucket_endpoint: 'scans/unpublished'
-    source_bucket_endpoint: 'staging_test/'
+provider:
+    digital_ocean:
+        source_bucket: 'acip'
+        target_bucket: 'acip'
+        target_bucket_endpoint: 'scans/unpublished'
+        source_bucket_endpoint: 'staging_test/'
+        target_s3_url: 'sfo2.digitaloceanspaces.com'
+    aws:
+        main_bucket: 'asianlegacylibrary'
+        source_bucket: 'all-library-source'
+        image_bucket: 'all-library-image'
+        manifest_bucket: 'all-library-manifests'
+        web_bucket: 'all-library-web'
+        main_prefix: 'staging/ramachandra_2'
+        general_prefix: ''
+        target_s3_url: 's3-us-west-2.amazonaws.com'
 
 orientation:
     landscape: "top-to-bottom"

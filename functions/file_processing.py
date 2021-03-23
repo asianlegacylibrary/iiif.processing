@@ -6,15 +6,16 @@ from pathlib import Path
 import botocore
 from PIL import Image
 
-from settings import flags, scan_directories, orientation, image_processing, source_bucket, target_bucket, \
-    operation_params
-from functions import get_digital_ocean_images, standardize_digits
+from settings import flags, scan_directories, orientation, image_processing, source_bucket, image_bucket, \
+    operation_params, main_bucket, _client, manifest_bucket
+from functions import get_image_listing, standardize_digits
 from typing import Tuple, Union
 import numpy as np
 import cv2
 import math
 from deskew import determine_skew
 
+options_temp = False
 
 def process_rotate(
         image: np.ndarray, angle: float, background: Union[int, Tuple[int, int, int]]
@@ -34,7 +35,25 @@ def process_rotate(
     return cv2.warpAffine(image, rot_mat, (int(round(height)), int(round(width))), borderValue=background)
 
 
-def copy_file(_resource, source_key, target_key):
+def copy_file(_resource, **kwargs):
+
+    from_source = {
+        'Bucket': kwargs['from_bucket'],
+        'Key': kwargs['from_key'],
+    }
+
+    try:
+        _resource.meta.client.copy(
+            from_source,
+            Bucket=kwargs['to_bucket'],
+            Key=kwargs['to_key'],
+        )
+    except botocore.exceptions.ClientError:
+        print(f"ERROR: botocore.exceptions.ClientError (copying file {kwargs['from_bucket']}{kwargs['from_key']} =>"
+              f" {kwargs['to_bucket']}{kwargs['to_key']})")
+
+
+def _copy_file(_resource, source_key, target_key):
 
     """
     :param _resource: object, boto3.resource('s3')
@@ -51,7 +70,7 @@ def copy_file(_resource, source_key, target_key):
     try:
         _resource.meta.client.copy(
             copy_source,
-            Bucket=target_bucket,
+            Bucket=image_bucket,
             Key=target_key,
         )
     except botocore.exceptions.ClientError:
@@ -60,9 +79,71 @@ def copy_file(_resource, source_key, target_key):
 
 def create_structure_and_copy(_resource, image_group_path, source_prefix,
                               image_listing, image_group_id):
+
+    # Copy scans from source to target_sources_dir without renaming and resizing
+    # List of file names ['scan01.jpg', 'scan02.jpg'] in source_images_dir
+    # print(source_prefix, image_group_path)
+
+    if options_temp == False:
+        results = _client.list_objects(Bucket=image_bucket, Prefix=image_group_path)
+
+        # print(f'Do not overwrite, already exists {results}')
+        if 'Contents' in results:
+            print(f'{image_group_path} exists in the all-library-image S3')
+            # debug_exists_directories.append(image_group_path)
+            return False
+
+    for image in image_listing['images']:
+        # Rename and copy scans from source_images_dir into target_sources_dir
+        # from_bucket = main_bucket
+        # to_bucket = source_bucket
+        # from_key = ''.join((source_prefix, image))
+        # to_key = '/'.join((image_group_path, image))
+        #
+        # params = {
+        #     'from_bucket': from_bucket,
+        #     'to_bucket': to_bucket,
+        #     'from_key': from_key,
+        #     'to_key': to_key
+        # }
+        #
+        # copy_file(_resource, **params)
+
+        # Copy and rename scans from target_sources_dir в target_images_dir
+        standard_idx = standardize_digits(image)
+        image_ext = Path(image).suffix
+        renamed_image = f'{image_group_id}.{standard_idx}{image_ext}'
+
+
+
+        # update the source to be previous target (we copy to 'sources', then 'sources' to 'images')
+        from_bucket = main_bucket
+        to_bucket = image_bucket
+        # from_key = to_key
+        from_key = ''.join((source_prefix, image))
+        to_key = '/'.join((image_group_path, renamed_image))
+
+        params = {
+            'from_bucket': from_bucket,
+            'to_bucket': to_bucket,
+            'from_key': from_key,
+            'to_key': to_key
+        }
+
+        copy_file(_resource, **params)
+
+        #### NOTE >>> LAMBDA FUNCTION HERE ###########################################
+        # This is where the lambda function would trigger
+        # When the renamed image is copied into 'images' folder
+        # The event of a new image appearing would trigger copy / process image to 'web' folder'
+        #### #########################################################################
+
+
+def _create_structure_and_copy(_resource, image_group_path, source_prefix,
+                              image_listing, image_group_id):
     # Create target path objects in S3 bucket
     put_params = dict(operation_params)
-    put_params['Bucket'] = target_bucket
+    put_params['Bucket'] = image_bucket
 
     dir_sources = '/'.join((image_group_path, scan_directories['sources']))
     dir_images = '/'.join((image_group_path, scan_directories['images']))
@@ -91,7 +172,11 @@ def create_structure_and_copy(_resource, image_group_path, source_prefix,
         source_key = target_key
         target_key = '/'.join((dir_images, renamed_image))
         copy_file(_resource, source_key, target_key)
-
+        #### NOTE >>> LAMBDA FUNCTION HERE ###########################################
+        # This is where the lambda function would trigger
+        # When the renamed image is copied into 'images' folder
+        # The event of a new image appearing would trigger copy / process image to 'web' folder'
+        #### #########################################################################
 
 def process_image(local_file_path, image_name, dir_web):
 
@@ -132,12 +217,12 @@ def process_image(local_file_path, image_name, dir_web):
 
 
 def create_web_files(_resource, image_group_path):
-    _bucket = _resource.Bucket(target_bucket)
+    _bucket = _resource.Bucket(image_bucket)
 
     dir_images = '/'.join((image_group_path, scan_directories['images']))
     dir_web = '/'.join((image_group_path, scan_directories['web']))
 
-    renamed_image_listing = get_digital_ocean_images(_resource, f'{dir_images}/')
+    renamed_image_listing = get_image_listing(_resource, f'{dir_images}/')
     if not renamed_image_listing:
         return None
     # temp local directory for storing downloaded/processed image files
@@ -170,7 +255,7 @@ def create_web_files(_resource, image_group_path):
             try:
                 _resource.meta.client.upload_file(
                     local_file_path,
-                    target_bucket,
+                    image_bucket,
                     image_processed_key,
                     ExtraArgs={'ContentType': 'image/jpeg', 'ACL': 'public-read'}
                 )
@@ -178,7 +263,7 @@ def create_web_files(_resource, image_group_path):
                 logging.error('upload error', e)
 
     # if we've uploaded the images to web, then switch out path for manifest in next step
-    renamed_image_listing['path'] = dir_web
+    renamed_image_listing['target_path'] = dir_web
     local_image_list = '/'.join((local_dir_path, '_image_listing.json'))
     with open(local_image_list, 'w') as file:
         json.dump(renamed_image_listing, file)
@@ -193,10 +278,51 @@ def upload_manifest(_resource, local_manifest, new_manifest_key):
     try:
         _resource.meta.client.upload_file(
             local_manifest,
-            target_bucket,
+            manifest_bucket,
             new_manifest_key,
             ExtraArgs={'ContentType': 'application/json', 'ACL': 'public-read'}
         )
 
     except botocore.exceptions.ClientError as e:
         logging.error('upload error', e)
+
+
+def download_image_for_meta(_resource, image_listing, bucket=main_bucket):
+
+    download_path = 'source_path' if bucket == main_bucket else 'target_path'
+    _bucket = _resource.Bucket(bucket)
+    # temp local directory for storing downloaded/processed image files
+    local_dir_path = '/'.join(('data', '_tmp_images', image_listing[download_path]))
+
+    try:
+        os.makedirs(local_dir_path)
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            logging.error(f"ERROR: creation of local image directory '{local_dir_path}' failed")
+    else:
+        logging.info(f"created local image directory '{local_dir_path}'")
+
+    # print(f'Download, process, and upload images for web...')
+    if len(image_listing['images']) < 1:
+        return False
+
+    img_idx = 1 if len(image_listing['images']) > 1 else 0
+    image_name = image_listing['images'][img_idx]
+
+    # download image file from S3
+    local_file_path = '/'.join((local_dir_path, image_name))
+
+    # check if file exists locally already or if overwrite is set to true
+    if not Path(local_file_path).is_file() or flags['download_overwrite']:
+        image_key = '/'.join((image_listing[download_path], image_name))
+        _bucket.download_file(image_key, local_file_path)
+
+    # process image file locally
+    img = cv2.imread(local_file_path)
+    height, width, _ = img.shape
+    viewing = orientation['landscape'] if width >= height else orientation['portrait']
+    image_meta = {'width': width, 'height': height, 'viewing': viewing}
+
+    # add the image meta to image listing
+    image_listing['images_meta'] = image_meta
+    return image_listing

@@ -1,7 +1,7 @@
 import os
 import boto3
 from botocore.exceptions import ClientError
-from settings import operation_params, image_min_size, operation_parameters_archive, target_bucket
+from settings import operation_params, image_min_size, operation_parameters_archive, main_bucket
 
 
 def list_test_directories(**kwargs):
@@ -34,7 +34,7 @@ def list_client_directories(_client, bucket='acip', main_directory=''):
     dirs = []
 
     try:
-        result = _client.list_objects(**op)
+        result = _client.list_objects_v2(**op)
     except ClientError as e:
         print('error', e)
         return None
@@ -46,9 +46,52 @@ def list_client_directories(_client, bucket='acip', main_directory=''):
     return dirs
 
 
-def get_digital_ocean_images(_resource, source_address):
+def get_image_listing(_resource, from_address, to_address, from_bucket, source_address=None):
+
     op = dict(operation_parameters_archive)
-    op['Bucket'] = target_bucket
+    op['Bucket'] = from_bucket
+    op['Prefix'] = from_address
+
+    paginator = _resource.meta.client.get_paginator('list_objects')
+    page_iterator = paginator.paginate(**op)
+
+
+    image_listing = {}
+    # paginate
+    for page in page_iterator:
+        if 'Contents' not in page:
+            continue
+
+        # page contents correspond to image groups
+        images = []
+        images_dict = {}
+        images_meta = {}
+        page_key = page['ResponseMetadata'].get('RequestId',
+                                                'some_key')  # need a random key gen if no req id present
+        for group in page['Contents']:
+            if group.get('Size', 0) < image_min_size:
+                continue
+            [dir_path, image_name] = os.path.split(group.get('Key'))
+            images.append(image_name)
+            images_dict[image_name] = {}
+
+        if images:
+            image_listing.update({
+                'key': page_key,
+                'source_path': source_address if source_address is not None else from_address,
+                'target_path': to_address,
+                'images_meta': images_meta,
+                'images': images,
+                'images_dict': images_dict
+            })
+
+    return image_listing
+
+
+def _get_digital_ocean_images(_resource, source_address):
+
+    op = dict(operation_parameters_archive)
+    op['Bucket'] = main_bucket
     op['Prefix'] = source_address
 
     paginator = _resource.meta.client.get_paginator('list_objects')

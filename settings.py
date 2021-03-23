@@ -12,9 +12,17 @@ load_dotenv()
 spaces = {
     'region_name': os.environ.get("SPACES_REGION"),
     'endpoint_url': os.environ.get("SPACES_HOST"),
-    'aws_access_key_id': os.environ.get("AWS_KEY"),
-    'aws_secret_access_key': os.environ.get("AWS_SECRET")
+    'aws_access_key_id': os.environ.get("DO_FOR_AWS_KEY"),
+    'aws_secret_access_key': os.environ.get("DO_FOR_AWS_SECRET")
 }
+
+# create client for S3
+# get session / resource for S3
+# _session = boto3.session.Session()
+# _resource = _session.resource('s3', **spaces)
+# _client = boto3.client('s3', **spaces)
+_client = boto3.client('s3')
+_resource = boto3.resource('s3')
 
 operation_params = {
     'Bucket': '',
@@ -27,11 +35,6 @@ operation_parameters_archive = {
     'Delimiter': '/'
 }
 
-
-# get session / resource for S3
-_session = boto3.session.Session()
-_resource = _session.resource('s3', **spaces)
-_client = boto3.client('s3', **spaces)
 
 
 debug_found_directories = []
@@ -52,14 +55,24 @@ MANIFEST_DIR = os.path.join(ROOT_DIR, 'manifests')
 # create the structure for manifests
 manifest_template, canvas_template, seq_template = load_templates(TEMPLATE_DIR, m_template, c_template, s_template)
 
+provider = 'aws'
 
 with open('config.yaml') as c:
     config = yaml.load(c, Loader=yaml.FullLoader)
     flags = config['flags']
-    target_bucket = config['digital_ocean']['target_bucket']
-    source_bucket = config['digital_ocean']['source_bucket']
-    target_bucket_endpoint = config['digital_ocean']['target_bucket_endpoint']
-    source_bucket_endpoint = config['digital_ocean']['source_bucket_endpoint']
+    main_bucket = config['provider'][provider]['main_bucket']
+    source_bucket = config['provider'][provider]['source_bucket']
+    image_bucket = config['provider'][provider]['image_bucket']
+    manifest_bucket = config['provider'][provider]['manifest_bucket']
+    web_bucket = config['provider'][provider]['web_bucket']
+    main_prefix = config['provider'][provider]['main_prefix']
+    general_prefix = config['provider'][provider]['general_prefix']
+    target_s3_url = config['provider'][provider]['target_s3_url']
+    provider = config['provider']
+    # aws_target_bucket = config['provider']['aws']['target_bucket']
+    # aws_source_bucket = config['provider']['aws']['source_bucket']
+    # aws_target_bucket_endpoint = config['provider']['aws']['target_bucket_endpoint']
+    # aws_source_bucket_endpoint = config['provider']['aws']['source_bucket_endpoint']
     test_data_file = config['test_data']
     scan_directories = config['scan_directories']
     local_image_listing_file = config['local_image_listing_file']

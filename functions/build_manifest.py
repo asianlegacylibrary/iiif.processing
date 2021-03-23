@@ -9,7 +9,10 @@ from templates.placeholder_values import manifest_values
 
 def update_seq(page, seq_template):
     s = seq_template
-    item = next(iter(page['images_dict'].values()), None)['viewing']
+    # item = next(iter(page['images_dict'].values()), None)['viewing']
+    # item = next(iter(page['images_dict'].values()), None)
+    item = page['images_meta']['viewing']
+
     if item is not None:
         v = {'viewing': item}
         s = update_json_placeholders(seq_template, v)
@@ -22,26 +25,26 @@ def update_meta(record):
 
     meta_listing = []
     for field_name, value in record.items():
+        if field_name == 'number_of_images':
+            print(field_name, value, str(value))
         if value:
             # print(f'{field_name}: {value}')
-            meta_listing.append({'label': field_name, 'value': value})
+            meta_listing.append({'label': field_name, 'value': str(value)})
 
     return meta_listing
 
 
 def build_manifest(page, manifest_template, canvas_template, seq_template, record):
 
-
     record_values = {
         **manifest_values,
         **{
-            'manifest_title': record.title,
-            'manifest_description': record.description
+            'manifest_title': record['title'],
+            'manifest_description': record['description']
         }
     }
 
     meta_listing = update_meta(record)
-
     # with record, fill in the manifest template
     manifest_structure = update_json_placeholders(manifest_template, record_values)
 
@@ -75,8 +78,10 @@ def build_manifest(page, manifest_template, canvas_template, seq_template, recor
                     image_ext = Path(image_name).suffix
                     # image_num = get_image_index(Path(image_name).stem)
                     image_num = standardize_digits(image_name)
-                    image_width = meta['width']
-                    image_height = meta['height']
+                    # image_width = meta['width']
+                    # image_height = meta['height']
+                    image_width = page['images_meta']['width']
+                    image_height = page['images_meta']['height']
                     ordered_image_listing.append((image_num, image_name, image_ext, image_width, image_height))
                 # sort images listing by extracted index:
                 ordered_image_listing.sort()
@@ -92,7 +97,7 @@ def build_manifest(page, manifest_template, canvas_template, seq_template, recor
                         "image_num": image_num,
                         "width": image_width,
                         "height": image_height,
-                        "group_name": page['path']
+                        "group_name": page['target_path']
                     }
                     update_items = update_canvas_items(manifest_values, **replacement_items)
                     current_canvas = update_json_placeholders(canvas_template, update_items)
