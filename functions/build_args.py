@@ -66,11 +66,6 @@ def build_args(argv=None):
                         action='store_true',
                         help='copy images and dir structure from staging to production')
 
-    parser.add_argument('-w',
-                        '--web',
-                        action='store_true',
-                        help='create web directory and process images for web')
-
     parser.add_argument('-m',
                         '--manifest',
                         action='store_true',

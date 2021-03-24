@@ -44,6 +44,16 @@ google:
         nlm: "config/credentials_gs_old.json"
         acip: ".acip_creds.json"
     sheets:
+        ids:
+            ramachandra_1: "1-YPHZj1-YVPs7FW0p5IFKgw4qcGCRklg4WdmDEHuQZs"
+            ramachandra_2: "1-YPHZj1-YVPs7FW0p5IFKgw4qcGCRklg4WdmDEHuQZs"
+            iiif: "1NZPbJArxgaAn3x-u5n0zqUxxK2yskd2KoPRmfHx05vE"
+        names:
+            ramachandra_1: "New"
+            ramachandra_2: "New_2"
+            scan_input: "aws_input"
+            catalog_input: "catalog_input"
+            merged_input: "merged_input"
         main_output:
             spreadsheet_id: "1NZPbJArxgaAn3x-u5n0zqUxxK2yskd2KoPRmfHx05vE"
             sheet_name: "OUTPUT"
@@ -84,12 +94,13 @@ provider:
         source_bucket_endpoint: 'staging_test/'
         target_s3_url: 'sfo2.digitaloceanspaces.com'
     aws:
-        main_bucket: 'asianlegacylibrary'
-        source_bucket: 'all-library-source'
-        image_bucket: 'all-library-image'
+        all_bucket: 'all-library'
+        source_bucket: 'all-library-sources'
+        image_bucket: 'all-library-images'
         manifest_bucket: 'all-library-manifests'
         web_bucket: 'all-library-web'
         main_prefix: 'staging/ramachandra_2'
+        source_prefix: 'staging'
         general_prefix: ''
         target_s3_url: 's3-us-west-2.amazonaws.com'
 

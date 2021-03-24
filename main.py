@@ -4,8 +4,7 @@ import pandas as pd
 import boto3
 from math import floor
 from string_grouper import match_most_similar
-from settings import google, image_group_records, debug_found_directories, _client, source_bucket, \
-    source_bucket_endpoint
+from settings import google, image_group_records, debug_found_directories, _client, source_bucket, source_prefix
 from functions import configure_logger, authorize_google, get_sheet_data, process_dataframe, \
     set_google_sheets, get_sheet_id, list_client_directories, write_sheet_data, build_args, create_bucket_policy, \
     copy_input
@@ -33,7 +32,7 @@ if __name__ == "__main__":
     # GET A LISTING OF ALL SCAN DIRECTORIES #########################
 
     digital_ocean_scan_dirs = []
-    for d in list_client_directories(_client, bucket=source_bucket, main_directory=source_bucket_endpoint):
+    for d in list_client_directories(_client, bucket=source_bucket, main_directory=source_prefix):
         tmp_dir = list_client_directories(_client, bucket=source_bucket, main_directory=d)
         digital_ocean_scan_dirs.append(tmp_dir)
     

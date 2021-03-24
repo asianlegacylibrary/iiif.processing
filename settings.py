@@ -36,7 +36,6 @@ operation_parameters_archive = {
 }
 
 
-
 debug_found_directories = []
 debug_exists_directories = []
 debug_not_found_directories = []
@@ -60,19 +59,13 @@ provider = 'aws'
 with open('config.yaml') as c:
     config = yaml.load(c, Loader=yaml.FullLoader)
     flags = config['flags']
-    main_bucket = config['provider'][provider]['main_bucket']
-    source_bucket = config['provider'][provider]['source_bucket']
-    image_bucket = config['provider'][provider]['image_bucket']
-    manifest_bucket = config['provider'][provider]['manifest_bucket']
-    web_bucket = config['provider'][provider]['web_bucket']
+    source_bucket = f"{config['provider'][provider]['all_bucket']}-sources"
+    image_bucket = f"{config['provider'][provider]['all_bucket']}-images"
+    manifest_bucket = f"{config['provider'][provider]['all_bucket']}-manifests"
     main_prefix = config['provider'][provider]['main_prefix']
+    source_prefix = config['provider'][provider]['source_prefix']
     general_prefix = config['provider'][provider]['general_prefix']
     target_s3_url = config['provider'][provider]['target_s3_url']
-    provider = config['provider']
-    # aws_target_bucket = config['provider']['aws']['target_bucket']
-    # aws_source_bucket = config['provider']['aws']['source_bucket']
-    # aws_target_bucket_endpoint = config['provider']['aws']['target_bucket_endpoint']
-    # aws_source_bucket_endpoint = config['provider']['aws']['source_bucket_endpoint']
     test_data_file = config['test_data']
     scan_directories = config['scan_directories']
     local_image_listing_file = config['local_image_listing_file']
