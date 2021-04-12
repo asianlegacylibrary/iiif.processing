@@ -4,7 +4,8 @@ import logging
 from pathlib import Path
 import botocore
 from botocore import exceptions
-import cv2
+# import cv2
+from PIL import Image, UnidentifiedImageError, ExifTags
 from tqdm import tqdm
 from settings import flags, orientation, manifest_bucket, source_bucket, web_bucket
 from functions import standardize_digits
@@ -132,11 +133,13 @@ def download_image_for_meta(_resource, image_listing, bucket=source_bucket):
         _bucket.download_file(image_key, local_file_path)
 
     # process image file locally
-    img = cv2.imread(local_file_path)
+    # img = cv2.imread(local_file_path)
+    img = Image.open(local_file_path)
     if img is None:
         image_meta = {'width': 1, 'height': 1, 'viewing': orientation['default']}
     else:
-        height, width, _ = img.shape
+        # height, width, _ = img.shape
+        width, height = img.size
         viewing = orientation['landscape'] if width >= height else orientation['portrait']
         image_meta = {'width': width, 'height': height, 'viewing': viewing}
 

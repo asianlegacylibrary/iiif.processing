@@ -14,7 +14,7 @@ from .authorize_google import authorize_google, get_sheet_data, write_sheet_data
     set_google_sheets, get_sheet_ids, get_sheet_id
 
 # PROCESS IMAGES
-from .process_rotation import process_rotate
+# from .process_rotation import process_rotate
 
 # MAIN RECORD PROCESSING FUNCTIONS
 from .process_records import process_record, process_file, process_dataframe, copy_record, process_manifest

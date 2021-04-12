@@ -72,11 +72,11 @@ if __name__ == "__main__":
     for record in tqdm(full_input, position=1):
 
         # 1. copy records
-        if args.copy == 'True':
+        if args.copy == 'True' or args.copy:
             copy_record(record, options)
 
         # 2. create manifest
-        if args.manifest == 'True':
+        if args.manifest == 'True' or args.manifest:
             process_manifest(record, options)
 
 
