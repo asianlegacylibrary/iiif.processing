@@ -12,7 +12,7 @@ class Timer(ContextDecorator):
 
     timers: ClassVar[Dict[str, float]] = dict()
     name: Optional[str] = None
-    text: str = "\nElapsed time: {:0.4f} seconds"
+    text: str = "Elapsed time: {:0.4f} seconds\n"
     logger: Optional[Callable[[str], None]] = print
     _start_time: Optional[float] = field(default=None, init=False, repr=False)
 

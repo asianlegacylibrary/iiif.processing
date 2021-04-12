@@ -67,9 +67,9 @@ def authorize_google(**kwargs):
     return sheets_service, drive_service
 
 
-@Timer(name="input data")
+# @Timer(name="input data")
 def get_sheet_data(service, **kwargs):
-    sheet_range = f"{kwargs['sheet_input_name']}!A1:Z"
+    sheet_range = f"{kwargs['sheet_input_name']}!A1:AZ"
     # get data, transform to data frame
     result = (
         service.spreadsheets().values().get(

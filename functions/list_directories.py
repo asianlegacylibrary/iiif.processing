@@ -1,6 +1,7 @@
 import os
 from botocore.exceptions import ClientError
 from settings import image_min_size, operation_parameters_archive, _client
+from classes import Timer
 
 
 def list_client_directories(_client, bucket='acip', main_directory=''):
@@ -60,6 +61,9 @@ def get_image_listing(_resource, from_address, to_address, from_bucket, source_a
                 'images': images,
                 'images_dict': images_dict
             })
+
+    if not image_listing:
+        return None
 
     return image_listing
 

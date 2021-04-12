@@ -1,86 +1,86 @@
-from datetime import date
 import pandas as pd
-from functions import build_args, create_bucket_policy, process_dataframe, \
-    authorize_google, set_google_sheets, get_sheet_id, write_sheet_data, get_sheet_data, get_s3_objects
-from settings import source_prefix, source_bucket, google
+import re
+from tqdm import tqdm
+from functions import build_args, create_bucket_policy, authorize_google, set_google_sheets, \
+    get_sheet_id, get_sheet_data, copy_record, gather_scan_data, configure_logger, process_manifest, \
+    standardize_digits, get_s3_objects
+from settings import source_prefix, source_bucket, google, web_bucket, general_prefix
 
-args = build_args()
-options = vars(args)
+# set up error logs
+configure_logger()
+manifest = False
 
-create_bucket_policy()
+if __name__ == "__main__":
 
-print(args)
+    args = build_args()
+    options = vars(args)
 
-main_prefix = f'{source_prefix}/ramachandra_2/'
-fixed_item_prefix = "ISKS2RC"
+    create_bucket_policy()
 
-# GET CATALOG DATA ##############################################
-# catalog data found in Google Sheets currently
-_sheets, _ = authorize_google(**google)  # can also obtain _drive service here
-# set config details for which sheets act as I/O
-sheet_config = set_google_sheets(input_name=args.input, output_name=args.output, **google)
-sheet_config = get_sheet_id(_sheets, **sheet_config)
-catalog_data = get_sheet_data(_sheets, **sheet_config)
+    print(args)
+    print(options)
 
-# GET A LISTING OF ALL SCAN DIRECTORIES #########################
-scan_dirs = []
-# for d in list_client_directories(_client, bucket=main_bucket, main_directory=main_prefix):
-#     tmp_dir = list_client_directories(_client, bucket=main_bucket, main_directory=d)
-for d in get_s3_objects(bucket=source_bucket, prefix=main_prefix):
-    scan_dirs.append(d)
 
-scan_dir_paths = sorted(set(scan_dirs))  # create a set
-print(scan_dir_paths)
 
-# scan_dirs = {}
-scan_listing = []
+    main_prefix = f'{source_prefix}/ramachandra_2/'
+    fixed_item_prefix = "ISKS1RC"
 
-for s in scan_dir_paths:
-    key = s.split('/')[-2]  # -2 because an S3 directory obj always ends in a /
-    if len(key) < 1 or key is None or key == '':
-        continue
+    # input = 'ramachandra_1_2'
+    input = 'previously_gathered'
 
-    # split the key into its SERIES and TITLE
-    # ex. 12502 Jyotirvilasa in marathi >>> SERIES: 12502, TITLE: Jyotirvilasa in marathi
-    try:
-        series, title = key.split(' ', 1)
-    except ValueError:
-        print('value error', key)
-        continue
+    # GET CATALOG DATA ##############################################
+    # catalog data found in Google Sheets currently
+    _sheets, _ = authorize_google(**google)  # can also obtain _drive service here
+    # set config details for which sheets act as I/O
+    sheet_config = set_google_sheets(input_name=input, output_name=args.output, **google)
+    sheet_config = get_sheet_id(_sheets, **sheet_config)
 
-    if not series.isdigit() or title is None:
-        continue
+    print(sheet_config)
 
-    scan_listing.append({
-        'key': key,
-        'work_uid': f'W.{fixed_item_prefix}{series}.001',
-        'item_uid': f'{fixed_item_prefix}{series}',
-        'image_group_uid': f'IG.{fixed_item_prefix}{series}.001',
-        'series': series,
-        'title': title,
-        'directory_path': s,
-        'description': f'Manifest built on {date.today()}'
-    })
 
-scan_data = pd.DataFrame(scan_listing)
+    # catalog_data = get_sheet_data(_sheets, **sheet_config)
+    # scan_data = gather_scan_data(source_bucket, main_prefix, fixed_item_prefix)
+    # scan_data = pd.DataFrame(scan_data)
+    #
+    # print(f'shape of CATALOG data is {catalog_data.shape}')
+    # print(f'shape of SCAN data is {scan_data.shape}')
+    # scan_cols = scan_data.columns.difference(catalog_data.columns).insert(0, 'series')
+    # # with merged records
+    # full_input = pd.merge(catalog_data, scan_data[scan_cols], left_on='series', right_on='series', how='inner')
+    # write_sheet_data(_sheets, full_input, output_name='full_input', **sheet_config)
+    # quit()
 
-print(f'shape of CATALOG data is {catalog_data.shape}')
-print(f'shape of SCAN data is {scan_data.shape}')
+    full_input = get_sheet_data(_sheets, **sheet_config)
 
-scan_cols = scan_data.columns.difference(catalog_data.columns).insert(0, 'series')
-# scan_cols = scan_cols.insert(0, 'series')
+    # print(f'shape of input is {full_input.shape}')
+    # check in on web scans folder (all-library-web) for manifest generation
+    if manifest:
+        scan_dirs = []
+        for d in get_s3_objects(bucket=web_bucket, prefix=general_prefix):
+            d = d.replace("/", "")
+            scan_dirs.append(d)
 
-# with merged records
-full_input = pd.merge(catalog_data, scan_data[scan_cols], left_on='series', right_on='series', how='inner')
+        scan_dir_paths = pd.Series(sorted(set(scan_dirs)))  # create a set
+        print(scan_dir_paths.head())
+        full_input = full_input[full_input.itemuid.isin(scan_dir_paths)]
 
-write_sheet_data(_sheets, full_input, output_name='full_input', **sheet_config)
+    full_input = full_input.to_dict(orient='records')
 
-# write to google sheets
-# process
-# copy sources to images
-# build manifests
-process_dataframe(full_input, options)
+    # write to google sheets
+    # process
+    # copy sources to images
+    # full_input.apply(lambda x: copy_record(x, options, full_input.shape[0]), axis=1)
+    for record in tqdm(full_input, position=1):
+        # 1. copy records
+        if manifest:
+            process_manifest(record, options)
+        else:
+            copy_record(record, options)
+        # 2. create manifests
+        #
 
-# write results to google sheets
+    # build manifests
+
+    # write results to google sheets
 
 

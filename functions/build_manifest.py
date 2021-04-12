@@ -25,8 +25,6 @@ def update_meta(record):
 
     meta_listing = []
     for field_name, value in record.items():
-        if field_name == 'number_of_images':
-            print(field_name, value, str(value))
         if value:
             # print(f'{field_name}: {value}')
             meta_listing.append({'label': field_name, 'value': str(value)})

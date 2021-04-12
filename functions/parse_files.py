@@ -3,7 +3,8 @@ from pathlib import Path
 
 
 def get_trailing_number(s):
-    m = re.search(r'\d+$', s)
+    # m = re.search(r'\d+$', s)
+    m = re.search(r'(\d+)(?!.*\d)', s)
     return int(m.group()) if m else 0
 
 

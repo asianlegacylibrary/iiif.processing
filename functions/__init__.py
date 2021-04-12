@@ -17,7 +17,10 @@ from .authorize_google import authorize_google, get_sheet_data, write_sheet_data
 from .process_rotation import process_rotate
 
 # MAIN RECORD PROCESSING FUNCTIONS
-from .process_records import process_record, process_file, process_dataframe
+from .process_records import process_record, process_file, process_dataframe, copy_record, process_manifest
+
+# GATHERING INPUT DATA
+from .gather_inputs import gather_scan_data
 
 # logging
 from .print_logger import Logger

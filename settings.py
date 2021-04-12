@@ -61,6 +61,7 @@ with open('config.yaml') as c:
     flags = config['flags']
     source_bucket = f"{config['provider'][provider]['all_bucket']}-sources"
     image_bucket = f"{config['provider'][provider]['all_bucket']}-images"
+    web_bucket = f"{config['provider'][provider]['all_bucket']}-web"
     manifest_bucket = f"{config['provider'][provider]['all_bucket']}-manifests"
     main_prefix = config['provider'][provider]['main_prefix']
     source_prefix = config['provider'][provider]['source_prefix']
