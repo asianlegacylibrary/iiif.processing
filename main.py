@@ -30,7 +30,7 @@ if __name__ == "__main__":
     # catalog data found in Google Sheets currently
     _sheets, _ = authorize_google(**google)  # can also obtain _drive service here
     # set config details for which sheets act as I/O
-    sheet_config = set_google_sheets(input_name=input, output_name=args.output, **google)
+    sheet_config = set_google_sheets(input_name=input, output_name=options['output'], **google)
     sheet_config = get_sheet_id(_sheets, **sheet_config)
 
     print(sheet_config)
@@ -59,14 +59,14 @@ if __name__ == "__main__":
 
     # print(f'shape of input is {full_input.shape}')
     # check in on web scans folder (all-library-web) for manifest generation
-    if args.manifest == 'True' or args.manifest:
+    if str(options['manifest']) == 'True':
         scan_dirs = []
         for d in get_s3_objects(bucket=web_bucket, prefix=general_prefix):
             d = d.replace("/", "")
             scan_dirs.append(d)
 
         scan_dir_paths = pd.Series(sorted(set(scan_dirs)))  # create a set
-        print(scan_dir_paths.head())
+        print('Creating manifests...', scan_dir_paths.head())
         full_input = full_input[full_input.itemuid.isin(scan_dir_paths)]
 
     full_input = full_input.to_dict(orient='records')
@@ -78,11 +78,11 @@ if __name__ == "__main__":
     for record in tqdm(full_input, position=1):
 
         # 1. copy records
-        if args.copy == 'True' or args.copy:
+        if str(options['copy']) == 'True':
             copy_record(record, options)
 
         # 2. create manifest
-        if args.manifest == 'True' or args.manifest:
+        if str(options['manifest']) == 'True':
             process_manifest(record, options)
 
 
