@@ -134,7 +134,13 @@ def download_image_for_meta(_resource, image_listing, bucket=source_bucket):
 
     # process image file locally
     # img = cv2.imread(local_file_path)
-    img = Image.open(local_file_path)
+
+    try:
+        img = Image.open(local_file_path)
+    except UnidentifiedImageError:
+        print(f'Image corrupt or image type unknown for {local_file_path}')
+        img = None
+
     if img is None:
         image_meta = {'width': 1, 'height': 1, 'viewing': orientation['default']}
     else:

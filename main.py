@@ -20,7 +20,6 @@ if __name__ == "__main__":
     print(options)
 
 
-
     main_prefix = f'{source_prefix}/ramachandra_2/'
     fixed_item_prefix = "ISKS1RC"
 
@@ -50,10 +49,17 @@ if __name__ == "__main__":
     # quit()
 
     full_input = get_sheet_data(_sheets, **sheet_config)
+    #print(full_input.head())
+    #print(full_input.columns)
+    print(full_input.shape[0])
+    # skip_list = ['12573', '12580']
+    full_input = full_input[~full_input['series'].isin(args.skip_list.split(','))]
+    print(full_input.shape[0])
+    # quit()
 
     # print(f'shape of input is {full_input.shape}')
     # check in on web scans folder (all-library-web) for manifest generation
-    if args.manifest == 'True':
+    if args.manifest == 'True' or args.manifest:
         scan_dirs = []
         for d in get_s3_objects(bucket=web_bucket, prefix=general_prefix):
             d = d.replace("/", "")
