@@ -16,13 +16,18 @@ load_dotenv()
 #     'aws_secret_access_key': os.environ.get("DO_FOR_AWS_SECRET")
 # }
 
+aws_creds = {
+    'aws_access_key_id': os.environ.get("AWS_KEY"),
+    'aws_secret_access_key': os.environ.get("AWS_SECRET")
+}
+
 # create client for S3
 # get session / resource for S3
 # _session = boto3.session.Session()
 # _resource = _session.resource('s3', **spaces)
 # _client = boto3.client('s3', **spaces)
-_client = boto3.client('s3')
-_resource = boto3.resource('s3')
+_client = boto3.client('s3', **aws_creds)
+_resource = boto3.resource('s3', **aws_creds)
 
 operation_params = {
     'Bucket': '',
