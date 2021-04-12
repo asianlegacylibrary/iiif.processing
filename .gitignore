@@ -7,7 +7,7 @@
 archive/
 _archive.py
 /config
-.acip_creds.json
+
 /manifests
 /data/_tmp_images
 log.txt
@@ -19,6 +19,7 @@ help.txt
 .env
 credentials*
 token.pickle
+.acip_creds.json
 
 
 # virtual env

@@ -9,12 +9,12 @@ from templates.load_template_settings import load_templates
 
 load_dotenv()
 
-spaces = {
-    'region_name': os.environ.get("SPACES_REGION"),
-    'endpoint_url': os.environ.get("SPACES_HOST"),
-    'aws_access_key_id': os.environ.get("DO_FOR_AWS_KEY"),
-    'aws_secret_access_key': os.environ.get("DO_FOR_AWS_SECRET")
-}
+# spaces = {
+#     'region_name': os.environ.get("SPACES_REGION"),
+#     'endpoint_url': os.environ.get("SPACES_HOST"),
+#     'aws_access_key_id': os.environ.get("DO_FOR_AWS_KEY"),
+#     'aws_secret_access_key': os.environ.get("DO_FOR_AWS_SECRET")
+# }
 
 # create client for S3
 # get session / resource for S3
