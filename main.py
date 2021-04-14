@@ -3,14 +3,14 @@ import re
 from tqdm import tqdm
 from functions import build_args, create_bucket_policy, authorize_google, set_google_sheets, \
     get_sheet_id, get_sheet_data, copy_record, gather_scan_data, configure_logger, process_manifest, \
-    standardize_digits, get_s3_objects
-from settings import source_prefix, source_bucket, google, web_bucket, general_prefix
+    standardize_digits, get_s3_objects, check_bucket_sizes, write_sheet_data
+from settings import source_prefix, source_bucket, google, web_bucket, general_prefix, \
+    debug_exists_directories, debug_requires_processing
 
 # set up error logs
 configure_logger()
 
 if __name__ == "__main__":
-
     args = build_args()
     options = vars(args)
 
@@ -18,7 +18,6 @@ if __name__ == "__main__":
 
     print(args)
     print(options)
-
 
     main_prefix = f'{source_prefix}/ramachandra_2/'
     fixed_item_prefix = "ISKS1RC"
@@ -29,6 +28,9 @@ if __name__ == "__main__":
     # GET CATALOG DATA ##############################################
     # catalog data found in Google Sheets currently
     _sheets, _ = authorize_google(**google)  # can also obtain _drive service here
+
+
+
     # set config details for which sheets act as I/O
     sheet_config = set_google_sheets(input_name=input, output_name=options['output'], **google)
     sheet_config = get_sheet_id(_sheets, **sheet_config)
@@ -71,22 +73,38 @@ if __name__ == "__main__":
 
     full_input = full_input.to_dict(orient='records')
 
-    # write to google sheets
-    # process
-    # copy sources to images
-    # full_input.apply(lambda x: copy_record(x, options, full_input.shape[0]), axis=1)
-    for record in tqdm(full_input, position=1):
+        # write to google sheets
+        # process
+        # copy sources to images
+        # full_input.apply(lambda x: copy_record(x, options, full_input.shape[0]), axis=1)
+    try:
+        for record in tqdm(full_input, position=0 if options['check_buckets'] else 1):
 
-        # 1. copy records
-        if str(options['copy']) == 'True':
-            copy_record(record, options)
+            continue_processing = True
+            if str(options['check_buckets']) == 'True':
+                continue_processing, _ = check_bucket_sizes(record)
 
-        # 2. create manifest
-        if str(options['manifest']) == 'True':
-            process_manifest(record, options)
+            # 1. copy records
+            if str(options['copy']) == 'True' and continue_processing:
+                copy_record(record)
+                _, _ = check_bucket_sizes(record)
 
+            # 2. create manifest
+            if str(options['manifest']) == 'True' and continue_processing:
+                process_manifest(record)
 
-    # build manifests
+        if str(options['check_buckets']) == 'True':
+            process_items = pd.DataFrame(debug_requires_processing)
+            processed_items = pd.DataFrame(debug_exists_directories)
+            write_sheet_data(_sheets, processed_items, output_name='processed_items', **sheet_config)
+            write_sheet_data(_sheets, process_items, output_name='process_items', **sheet_config)
+
+    except KeyboardInterrupt:
+        processing_list = list({v['id']:v for v in debug_requires_processing}.values())
+        process_items = pd.DataFrame(processing_list)
+        processed_items = pd.DataFrame(debug_exists_directories)
+        write_sheet_data(_sheets, processed_items, output_name='processed_items', **sheet_config)
+        write_sheet_data(_sheets, process_items, output_name='process_items', **sheet_config)
 
     # write results to google sheets
 

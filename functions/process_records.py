@@ -3,7 +3,7 @@ import logging
 from tqdm import tqdm
 from botocore import exceptions
 from settings import _client, target_s3_url, image_bucket, source_bucket, \
-    debug_found_directories, debug_exists_directories, debug_requires_copy, \
+    debug_found_directories, debug_exists_directories, debug_requires_processing, \
     manifest_template, canvas_template, seq_template, catalog_field_names, image_group_records, _resource, \
     manifest_bucket, web_bucket
 from functions import build_manifest, get_image_listing, create_structure_and_copy, \
@@ -14,7 +14,7 @@ from classes import TermColors, Timer
 def write_results_to_terminal():
     print(f'{TermColors.OKBLUE}Processed records for: {debug_found_directories}{TermColors.ENDC}')
     print(f'{TermColors.WARNING}These directories skipped, already exist: {debug_exists_directories}{TermColors.ENDC}')
-    print(f'{TermColors.OKCYAN}These require to run COPY: {debug_requires_copy}{TermColors.ENDC}')
+    print(f'{TermColors.OKCYAN}These require processing to balance object counts: {debug_requires_processing}{TermColors.ENDC}')
 
     print(f'Processed image group records: {image_group_records}')
 
@@ -125,7 +125,42 @@ def process_record(record, options):
     return True
 
 
-def copy_record(record, options):
+def check_bucket_sizes(record):
+    item_uid = record[catalog_field_names['item_uid']]
+    record_source_path = record[catalog_field_names['directory_path']]
+    image_group_uid = record[catalog_field_names['image_group_uid']]
+    image_group_path = '/'.join((item_uid, image_group_uid))
+
+    size_sources = sum(1 for _ in _resource.Bucket(source_bucket).objects.filter(Prefix=record_source_path))
+    size_images = sum(1 for _ in _resource.Bucket(image_bucket).objects.filter(Prefix=image_group_path))
+    size_web = sum(1 for _ in _resource.Bucket(web_bucket).objects.filter(Prefix=image_group_path))
+    continue_processing = True
+
+    if size_images == size_sources == size_web:
+        # print(image_group_path, size_sources, size_images, size_web)
+        # print(f'\n{image_group_path} exists in the all-library-images S3')
+        debug_exists_directories.append(
+            {'id': image_group_path, 'web': size_web, 'images': size_images, 'sources': size_sources}
+        )
+
+        msg = f'{size_images} for all buckets on {image_group_path}'
+        continue_processing = False
+        return continue_processing, msg
+    elif 0 < size_images < size_sources:
+        msg = f'Images: {size_images} /// Source: {size_sources}, for {image_group_path} ({size_sources})'
+    elif 0 < size_web < size_images:
+        msg = f'Web: {size_web} /// Images: {size_images}, for {image_group_path} ({size_sources})'
+    else:
+        msg = f'About to process: {image_group_path} ({size_sources}, {size_images}, {size_web}'
+
+    debug_requires_processing.append(
+        {'id': image_group_path, 'web': size_web, 'images': size_images, 'sources': size_sources}
+    )
+
+    return continue_processing, msg
+
+
+def copy_record(record):
 
     # print(f'Processing {len(debug_found_directories)+1} of {total_records}')
     # define necessary fields from record, create image group vars
@@ -135,24 +170,13 @@ def copy_record(record, options):
     # create IG path
     image_group_path = '/'.join((item_uid, image_group_uid))
 
-    if options['image_group_overwrite'] == 'False':
-        # results = _client.list_objects(Bucket=image_bucket, Prefix=image_group_path)
-        # print(results)
-        size_sources = sum(1 for _ in _resource.Bucket(source_bucket).objects.filter(Prefix=record_source_path))
-        size_images = sum(1 for _ in _resource.Bucket(image_bucket).objects.filter(Prefix=image_group_path))
-        size_web = sum(1 for _ in _resource.Bucket(web_bucket).objects.filter(Prefix=image_group_path))
-        if size_images == size_sources == size_web:
-            # print(image_group_path, size_sources, size_images, size_web)
-            # print(f'\n{image_group_path} exists in the all-library-images S3')
-            debug_exists_directories.append(image_group_path)
-            return False
-        elif 0 < size_images < size_sources:
-            print(f'Images: {size_images} /// Source: {size_sources}, for {image_group_path} ({size_sources})')
-        elif 0 < size_web < size_images:
-            print(f'Web: {size_web} /// Images: {size_images}, for {image_group_path} ({size_sources})')
-        else:
-            print(f'About to process: {image_group_path} ({size_sources}, {size_images}, {size_web}')
-
+    # if options['image_group_overwrite'] == 'False':
+    #     continue_processing, msg = check_bucket_sizes(record)
+    #     if not continue_processing:
+    #         print(msg)
+    #         return False
+    #
+    #     print(msg)
     # gather image listing from digital ocean for this catalog record
     # image_listing = get_image_listing(_resource, record_source_path, image_group_path, source_bucket)
     #
@@ -170,7 +194,7 @@ def copy_record(record, options):
     return True
 
 
-def process_manifest(record, options):
+def process_manifest(record):
 
     # define necessary fields from record, create image group vars
     item_uid = record[catalog_field_names['item_uid']]

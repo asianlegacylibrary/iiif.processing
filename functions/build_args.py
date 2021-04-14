@@ -71,6 +71,11 @@ def build_args(argv=None):
                         action='store_true',
                         help='create and upload manifest')
 
+    parser.add_argument('-k',
+                        '--check_buckets',
+                        action='store_true',
+                        help='check object counts in each bucket')
+
     parser.add_argument('-f',
                         '--file',
                         action='store_true',

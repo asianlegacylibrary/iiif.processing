@@ -44,7 +44,7 @@ operation_parameters_archive = {
 debug_found_directories = []
 debug_exists_directories = []
 debug_not_found_directories = []
-debug_requires_copy = []
+debug_requires_processing = []
 
 image_group_records = []
 
