@@ -22,7 +22,8 @@ if __name__ == "__main__":
     main_prefix = f'{source_prefix}/ramachandra_2/'
     fixed_item_prefix = "ISKS1RC"
 
-    # input = 'ramachandra_1_2'
+    # input = 'ramachandra_1_2' is previously_gathered
+    # next change input to ramachandra_1_1
     input = 'previously_gathered'
 
     # GET CATALOG DATA ##############################################
@@ -101,10 +102,11 @@ if __name__ == "__main__":
 
     except KeyboardInterrupt:
         processing_list = list({v['id']:v for v in debug_requires_processing}.values())
-        process_items = pd.DataFrame(processing_list)
-        processed_items = pd.DataFrame(debug_exists_directories)
-        write_sheet_data(_sheets, processed_items, output_name='processed_items', **sheet_config)
-        write_sheet_data(_sheets, process_items, output_name='process_items', **sheet_config)
+        process_df = pd.DataFrame(processing_list)
+        processed_list = list({v['id']: v for v in debug_exists_directories}.values())
+        processed_df = pd.DataFrame(processed_list)
+        write_sheet_data(_sheets, processed_df, output_name='processed_items', **sheet_config)
+        write_sheet_data(_sheets, process_df, output_name='process_items', **sheet_config)
 
     # write results to google sheets
 
