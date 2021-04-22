@@ -125,15 +125,18 @@ def process_record(record, options):
     return True
 
 
+def get_bucket_count(bucket, prefix):
+    return sum(1 for _ in _resource.Bucket(bucket).objects.filter(Prefix=prefix))
+
 def check_bucket_sizes(record):
     item_uid = record[catalog_field_names['item_uid']]
     record_source_path = record[catalog_field_names['directory_path']]
     image_group_uid = record[catalog_field_names['image_group_uid']]
     image_group_path = '/'.join((item_uid, image_group_uid))
 
-    size_sources = sum(1 for _ in _resource.Bucket(source_bucket).objects.filter(Prefix=record_source_path))
-    size_images = sum(1 for _ in _resource.Bucket(image_bucket).objects.filter(Prefix=image_group_path))
-    size_web = sum(1 for _ in _resource.Bucket(web_bucket).objects.filter(Prefix=image_group_path))
+    size_sources = get_bucket_count(source_bucket,record_source_path)
+    size_images = get_bucket_count(image_bucket, image_group_path)
+    size_web = get_bucket_count(web_bucket, image_group_path)
     continue_processing = True
 
     if size_images == size_sources == size_web:
@@ -169,21 +172,6 @@ def copy_record(record):
     image_group_uid = record[catalog_field_names['image_group_uid']]
     # create IG path
     image_group_path = '/'.join((item_uid, image_group_uid))
-
-    # if options['image_group_overwrite'] == 'False':
-    #     continue_processing, msg = check_bucket_sizes(record)
-    #     if not continue_processing:
-    #         print(msg)
-    #         return False
-    #
-    #     print(msg)
-    # gather image listing from digital ocean for this catalog record
-    # image_listing = get_image_listing(_resource, record_source_path, image_group_path, source_bucket)
-    #
-    # if image_listing is None:
-    #     print(f'{record_source_path} has no images, skipping...')
-    #     logging.warning(f'{record_source_path} has no images, skipping...')
-    #     return False
 
     create_structure_and_copy(_resource, image_group_path,
                               record_source_path, image_group_uid, source_bucket, image_bucket)
