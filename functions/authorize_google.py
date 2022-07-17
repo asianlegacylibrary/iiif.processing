@@ -48,6 +48,7 @@ def authorize_google(**kwargs):
     # time.
     if os.path.exists('token.pickle'):
         with open('token.pickle', 'rb') as token:
+            print(token)
             credentials = pickle.load(token)
     # If there are no (valid) credentials available, let the user log in.
     if not credentials or not credentials.valid:

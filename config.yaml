@@ -43,7 +43,7 @@ google:
     credentials:
         iiif: "config/credentials.json"
         nlm: "config/credentials_gs_old.json"
-        acip: ".acip_creds.json"
+        acip: "config/.acip_creds.json"
     sheets:
         ids:
             ramachandra_1: "1-YPHZj1-YVPs7FW0p5IFKgw4qcGCRklg4WdmDEHuQZs"
@@ -68,6 +68,9 @@ google:
         ramachandra_1_3:
             spreadsheet_id: "1-YPHZj1-YVPs7FW0p5IFKgw4qcGCRklg4WdmDEHuQZs"
             sheet_name: "New_3"
+        nibs_1_1:
+            spreadsheet_id: "1NZPbJArxgaAn3x-u5n0zqUxxK2yskd2KoPRmfHx05vE"
+            sheet_name: "INPUT"
         previously_gathered:
             spreadsheet_id: "1NZPbJArxgaAn3x-u5n0zqUxxK2yskd2KoPRmfHx05vE"
             sheet_name: "full_input"

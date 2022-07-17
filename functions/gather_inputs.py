@@ -13,8 +13,17 @@ def gather_scan_data(from_bucket, from_prefix, fixed_item_prefix):
     scan_dir_paths = sorted(set(scan_dirs))  # create a set
     scan_listing = []
 
+    # print(scan_dir_paths)
+
     for s in scan_dir_paths:
+        #encoded = s.encode('utf-8')
+        #decoded = encoded.decode('utf-8')
+        # print(type(s), encoded.decode('utf-8'))
+
         key = s.split('/')[-2]  # -2 because an S3 directory obj always ends in a /
+        # key = key.decode('utf-8')
+        #print(key)
+
         if len(key) < 1 or key is None or key == '':
             continue
 
@@ -26,8 +35,8 @@ def gather_scan_data(from_bucket, from_prefix, fixed_item_prefix):
             print('value error', key)
             continue
 
-        if not series.isdigit() or title is None:
-            continue
+        # if not series.isdigit() or title is None:
+        #     continue
 
         scan_listing.append({
             'key': key,
@@ -39,5 +48,7 @@ def gather_scan_data(from_bucket, from_prefix, fixed_item_prefix):
             'directory_path': s,
             'description': f'Manifest built on {date.today()}'
         })
+
+        # print(scan_listing)
 
     return scan_listing

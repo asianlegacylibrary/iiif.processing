@@ -76,8 +76,11 @@ def get_s3_objects(bucket, prefix="", suffix=""):
         'Delimiter': '/'
     }
 
-    paginator = _client.get_paginator('list_objects')
+    paginator = _client.get_paginator('list_objects_v2')
     result = paginator.paginate(**kwargs)
     print('results', result)
     for o in result.search('CommonPrefixes'):
-        yield o.get('Prefix')
+        # print(type(o), o.get('Prefix').encode('utf-8'))
+        if type(o) is dict:
+            yield o.get('Prefix')
+            # yield o['Prefix'].decode('utf-8')

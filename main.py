@@ -16,22 +16,27 @@ if __name__ == "__main__":
 
     create_bucket_policy()
 
-    print(args)
-    print(options)
+    print("ARGS: ", args)
+    print("OPTIONS: ", options)
 
-    main_prefix = f'{source_prefix}/ramachandra_3/'
-    fixed_item_prefix = "ISKS1RC"
+
+    # create something like collection options, ramachandra / nibs / etc
+    # and move some of this to config values
+
+    main_prefix = f'{source_prefix}/nibs_1/' #  f'{source_prefix}/ramachandra_3/'
+    fixed_item_prefix = "ISKS1NIBS" #  "ISKS1RC"
     input_previously_gathered = False
     # input = 'ramachandra_1_2' is previously_gathered
     # next change input to ramachandra_1_1
     if input_previously_gathered:
         input = 'previously_gathered'
     else:
-        input = 'ramachandra_1_3'
+        input = 'nibs_1_1'  # 'ramachandra_1_3'
 
     # GET CATALOG DATA ##############################################
     # catalog data found in Google Sheets currently
     _sheets, _ = authorize_google(**google)  # can also obtain _drive service here
+
     # set config details for which sheets act as I/O
     sheet_config = set_google_sheets(input_name=input, output_name=options['output'], **google)
     sheet_config = get_sheet_id(_sheets, **sheet_config)
@@ -42,20 +47,27 @@ if __name__ == "__main__":
         full_input = get_sheet_data(_sheets, **sheet_config)
     else:
         catalog_data = get_sheet_data(_sheets, **sheet_config)
+        print(source_bucket, main_prefix, fixed_item_prefix)
+
         scan_data = gather_scan_data(source_bucket, main_prefix, fixed_item_prefix)
+
+
         scan_data = pd.DataFrame(scan_data)
 
         print(f'shape of CATALOG data is {catalog_data.shape}')
         print(f'shape of SCAN data is {scan_data.shape}')
+
         scan_cols = scan_data.columns.difference(catalog_data.columns).insert(0, 'series')
+
         # with merged records
         full_input = pd.merge(catalog_data, scan_data[scan_cols], left_on='series', right_on='series', how='inner')
-        write_sheet_data(_sheets, full_input, output_name='full_input', **sheet_config)
+
+        write_sheet_data(_sheets, full_input, output_name='OUTPUT', **sheet_config)
 
 
-    quit()
+
     # work around to exclude scan folders with known but not addressed errors
-    full_input = full_input[~full_input['series'].isin(args.skip_list.split(','))]
+    # full_input = full_input[~full_input['series'].isin(args.skip_list.split(','))]
 
     # check in on web scans folder (all-library-web) for manifest generation
     if str(options['manifest']) == 'True':
@@ -82,30 +94,36 @@ if __name__ == "__main__":
             if str(options['check_buckets']) == 'True' and continue_processing:
                 continue_processing, _, create_manifest = check_bucket_sizes(record)
 
+
             # 1. copy records
             if str(options['copy']) == 'True' and continue_processing:
                 copy_record(record)
                 _, _, create_manifest = check_bucket_sizes(record)
 
+            # print('to process: ', debug_requires_processing)
+            # print('exists: ', debug_exists_directories)
+            # print('create manifest', create_manifest)
+
             # 2. create manifest
             if str(options['manifest']) == 'True' and create_manifest:
                 process_manifest(record)
+
 
         if str(options['check_buckets']) == 'True':
             processing_list = list({v['id']: v for v in debug_requires_processing}.values())
             process_df = pd.DataFrame(processing_list)
             processed_list = list({v['id']: v for v in debug_exists_directories}.values())
             processed_df = pd.DataFrame(processed_list)
-            write_sheet_data(_sheets, processed_df, output_name='processed_items', **sheet_config)
-            write_sheet_data(_sheets, process_df, output_name='process_items', **sheet_config)
+            write_sheet_data(_sheets, processed_df, output_name='processed_items_nibs', **sheet_config)
+            write_sheet_data(_sheets, process_df, output_name='process_items_nibs', **sheet_config)
 
     except KeyboardInterrupt:
         processing_list = list({v['id']:v for v in debug_requires_processing}.values())
         process_df = pd.DataFrame(processing_list)
         processed_list = list({v['id']: v for v in debug_exists_directories}.values())
         processed_df = pd.DataFrame(processed_list)
-        write_sheet_data(_sheets, processed_df, output_name='processed_items', **sheet_config)
-        write_sheet_data(_sheets, process_df, output_name='process_items', **sheet_config)
+        write_sheet_data(_sheets, processed_df, output_name='processed_items_nibs', **sheet_config)
+        write_sheet_data(_sheets, process_df, output_name='process_items_nibs', **sheet_config)
 
     # write results to google sheets
 

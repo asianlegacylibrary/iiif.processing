@@ -1,6 +1,25 @@
-manifest_values = {
+_ORIG_manifest_values = {
     "client_host": "http://iiif.asianclassics.org",
     "server_host": "http://157.245.187.36:8182",
+    "server_profile": "http://iiif.io/api/image/2/level2.json",
+    "server_context": "http://iiif.io/api/image/2/context.json",
+    "client_context": "http://iiif.io/api/presentation/2/context.json",
+    "manifest_url": "http://iiif.asianclassics.org/manifests/manifest.json",
+    "iiif_version": "2",
+    "server_path": "iiif",
+    "manifest_description": "Description",
+    "manifest_title": "Title",
+    "attribution": "Attribution",
+    "image_ext": "jpg",
+    "logo": "Logo"
+}
+
+# http_link = 'http://157.245.187.36:8182'
+# https_link = 'https://loupe.asianlegacylibrary.org'
+
+manifest_values = {
+    "client_host": "http://iiif.asianclassics.org",
+    "server_host": "https://loupe.asianlegacylibrary.org",
     "server_profile": "http://iiif.io/api/image/2/level2.json",
     "server_context": "http://iiif.io/api/image/2/context.json",
     "client_context": "http://iiif.io/api/presentation/2/context.json",

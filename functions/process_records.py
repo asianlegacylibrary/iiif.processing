@@ -95,11 +95,12 @@ def process_record(record, options):
         # Is there other data to add to the record here?
         manifest_name = f'{item_uid}.{image_group_uid}.manifest.json'
         # url_suffix = f'{general_prefix}/{item_uid}/{image_group_uid}'
-        url_suffix = f'{item_uid}/{image_group_uid}'
+        # url_suffix = f'{item_uid}/{image_group_uid}'
 
         # is this an item? that points to an image group?
         image_group_record = {
-            'manifest_url': f'https://{image_bucket}.{target_s3_url}/{url_suffix}/{manifest_name}',
+            # 'manifest_url': f'https://{image_bucket}.{target_s3_url}/{url_suffix}/{manifest_name}',
+            'manifest_url': f'https://{manifest_bucket}.{target_s3_url}/{manifest_name}',
             'item_uid': item_uid,
             'image_group_path': image_listing['target_path'],
             'image_group_uid': image_group_uid,
@@ -164,6 +165,8 @@ def check_bucket_sizes(record):
         {'id': image_group_path, 'web': size_web, 'images': size_images, 'sources': size_sources}
     )
 
+
+
     return continue_processing, msg, create_manifest
 
 
@@ -197,7 +200,7 @@ def process_manifest(record):
     # Is there other data to add to the record here?
     manifest_name = f'{item_uid}.{image_group_uid}.manifest.json'
     # url_suffix = f'{general_prefix}/{item_uid}/{image_group_uid}'
-    url_suffix = f'{item_uid}/{image_group_uid}'
+    # url_suffix = f'{item_uid}/{image_group_uid}'
 
     # print(f'{image_group_path}/{manifest_name}')
 
@@ -219,12 +222,14 @@ def process_manifest(record):
 
     # is this an item? that points to an image group?
     image_group_record = {
-        'manifest_url': f'https://{image_bucket}.{target_s3_url}/{url_suffix}/{manifest_name}',
+        #'manifest_url': f'https://{image_bucket}.{target_s3_url}/{url_suffix}/{manifest_name}',
+        'manifest_url': f'https://{manifest_bucket}.{target_s3_url}/{manifest_name}',
         'item_uid': item_uid,
         'image_group_path': image_listing['target_path'],
         'image_group_uid': image_group_uid,
         'number_of_images': len(image_listing['images'])
     }
+
     image_group_records.append(image_group_record)
 
     record_merged = {
