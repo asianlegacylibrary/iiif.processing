@@ -9,6 +9,9 @@ _archive.py
 /config
 /manifests
 
+/data/_tmp_images
+
+
 log.txt
 
 # move help text to readme
