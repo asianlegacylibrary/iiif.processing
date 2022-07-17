@@ -138,6 +138,7 @@ def check_bucket_sizes(record):
     size_images = get_bucket_count(image_bucket, image_group_path)
     size_web = get_bucket_count(web_bucket, image_group_path)
     continue_processing = True
+    create_manifest = True
 
     if size_images == size_sources == size_web:
         # print(image_group_path, size_sources, size_images, size_web)
@@ -148,19 +149,22 @@ def check_bucket_sizes(record):
 
         msg = f'{size_images} for all buckets on {image_group_path}'
         continue_processing = False
-        return continue_processing, msg
+        return continue_processing, msg, create_manifest
     elif 0 < size_images < size_sources:
         msg = f'Images: {size_images} /// Source: {size_sources}, for {image_group_path} ({size_sources})'
+        create_manifest = False
     elif 0 < size_web < size_images:
         msg = f'Web: {size_web} /// Images: {size_images}, for {image_group_path} ({size_sources})'
+        create_manifest = False
     else:
         msg = f'About to process: {image_group_path} ({size_sources}, {size_images}, {size_web}'
+        create_manifest = False
 
     debug_requires_processing.append(
         {'id': image_group_path, 'web': size_web, 'images': size_images, 'sources': size_sources}
     )
 
-    return continue_processing, msg
+    return continue_processing, msg, create_manifest
 
 
 def copy_record(record):

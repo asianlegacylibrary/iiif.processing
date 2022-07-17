@@ -8,8 +8,6 @@ archive/
 _archive.py
 /config
 
-/manifests
-/data/_tmp_images
 log.txt
 
 # move help text to readme
@@ -19,8 +17,6 @@ help.txt
 .env
 credentials*
 token.pickle
-.acip_creds.json
-
 
 # virtual env
 venv

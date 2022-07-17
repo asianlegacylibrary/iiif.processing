@@ -52,6 +52,7 @@ google:
         names:
             ramachandra_1: "New"
             ramachandra_2: "New_2"
+            ramachandra_3: "New_3"
             scan_input: "aws_input"
             catalog_input: "catalog_input"
             merged_input: "merged_input"
@@ -64,6 +65,9 @@ google:
         ramachandra_1_2:
             spreadsheet_id: "1-YPHZj1-YVPs7FW0p5IFKgw4qcGCRklg4WdmDEHuQZs"
             sheet_name: "New_2"
+        ramachandra_1_3:
+            spreadsheet_id: "1-YPHZj1-YVPs7FW0p5IFKgw4qcGCRklg4WdmDEHuQZs"
+            sheet_name: "New_3"
         previously_gathered:
             spreadsheet_id: "1NZPbJArxgaAn3x-u5n0zqUxxK2yskd2KoPRmfHx05vE"
             sheet_name: "full_input"

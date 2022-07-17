@@ -19,15 +19,15 @@ if __name__ == "__main__":
     print(args)
     print(options)
 
-    main_prefix = f'{source_prefix}/ramachandra_1/'
+    main_prefix = f'{source_prefix}/ramachandra_3/'
     fixed_item_prefix = "ISKS1RC"
-    input_previously_gathered = True
+    input_previously_gathered = False
     # input = 'ramachandra_1_2' is previously_gathered
     # next change input to ramachandra_1_1
     if input_previously_gathered:
         input = 'previously_gathered'
     else:
-        input = 'ramachandra_1_1'
+        input = 'ramachandra_1_3'
 
     # GET CATALOG DATA ##############################################
     # catalog data found in Google Sheets currently
@@ -53,6 +53,7 @@ if __name__ == "__main__":
         write_sheet_data(_sheets, full_input, output_name='full_input', **sheet_config)
 
 
+    quit()
     # work around to exclude scan folders with known but not addressed errors
     full_input = full_input[~full_input['series'].isin(args.skip_list.split(','))]
 
@@ -79,15 +80,15 @@ if __name__ == "__main__":
                 continue_processing = False
 
             if str(options['check_buckets']) == 'True' and continue_processing:
-                continue_processing, _ = check_bucket_sizes(record)
+                continue_processing, _, create_manifest = check_bucket_sizes(record)
 
             # 1. copy records
             if str(options['copy']) == 'True' and continue_processing:
                 copy_record(record)
-                _, _ = check_bucket_sizes(record)
+                _, _, create_manifest = check_bucket_sizes(record)
 
             # 2. create manifest
-            if str(options['manifest']) == 'True' and continue_processing:
+            if str(options['manifest']) == 'True' and create_manifest:
                 process_manifest(record)
 
         if str(options['check_buckets']) == 'True':

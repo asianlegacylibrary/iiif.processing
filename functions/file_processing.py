@@ -85,6 +85,10 @@ def create_structure_and_copy(_resource, image_group_path, source_prefix,
     #
     #     copy_file(_resource, **kwargs)
 
+def download_manifest(_resource):
+    # download manifest to local system for processing
+    print('download manifest')
+    
 
 def upload_manifest(_resource, local_manifest, new_manifest_key):
 
